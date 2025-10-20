@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "created": "2025-10-20T00:00:00.000Z"
+  },
+  "quizzes": [
+    {
+      "id": "g1-dari-1",
+      "grade": 1,
+      "subject": "دری",
+      "title": "دری - نمونه سوالات صنف ۱",
+      "questions": [
+        {
+          "q": "کدام حرف صدادار است؟ 'ا' یا 'ب'؟",
+          "options": [
+            "ا",
+            "ب",
+            "ت",
+            "ث"
+          ],
+          "answer": 0,
+          "explanation": "حرف 'ا' یک حرف صدادار است."
+        },
+        {
+          "q": "کلمهٔ 'مکتب' چیست؟",
+          "options": [
+            "خانه",
+            "غذا",
+            "مدرسه",
+            "ماشین"
+          ],
+          "answer": 2,
+          "explanation": "مکتب به معنی مدرسه است."
+        }
+      ]
+    },
+    {
+      "id": "g9-math-1",
+      "grade": 9,
+      "subject": "ریاضی",
+      "title": "ریاضی - نمونه سوالات صنف ۹",
+      "questions": [
+        {
+          "q": "2 + 3 = ؟",
+          "options": [
+            "3",
+            "4",
+            "5",
+            "6"
+          ],
+          "answer": 2,
+          "explanation": "2 + 3 = 5"
+        },
+        {
+          "q": "5 × 6 = ؟",
+          "options": [
+            "11",
+            "30",
+            "20",
+            "35"
+          ],
+          "answer": 1,
+          "explanation": "5 ضرب در 6 برابر 30 است."
+        }
+      ]
+    },
+    {
+      "id": "g12-eng-1",
+      "grade": 12,
+      "subject": "English",
+      "title": "English - Sample Quiz",
+      "questions": [
+        {
+          "q": "Choose the plural of 'child'",
+          "options": [
+            "childs",
+            "childer",
+            "children",
+            "childes"
+          ],
+          "answer": 2,
+          "explanation": "The correct plural is 'children'."
+        },
+        {
+          "q": "Synonym of 'big'",
+          "options": [
+            "small",
+            "large",
+            "tiny",
+            "short"
+          ],
+          "answer": 1,
+          "explanation": "'Large' is synonym of 'big'."
+        }
+      ]
+    }
+  ]
+}

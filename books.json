@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "created": "2025-10-20T00:00:00.000Z"
+  },
+  "books": [
+    {
+      "id": "en-g12",
+      "title": "English — صنف 12",
+      "grade": 12,
+      "subject": "English",
+      "language": "دری/پشتو",
+      "source": "MOE",
+      "url": "https://moe.gov.af/sites/default/files/2020-03/G12-Ps-English.pdf"
+    },
+    {
+      "id": "en-g11",
+      "title": "English — صنف 11",
+      "grade": 11,
+      "subject": "English",
+      "language": "دری/پشتو",
+      "source": "MOE",
+      "url": "https://moe.gov.af/sites/default/files/2020-03/G11-Ps-English.pdf"
+    },
+    {
+      "id": "en-g10",
+      "title": "English — صنف 10",
+      "grade": 10,
+      "subject": "English",
+      "language": "دری/پشتو",
+      "source": "MOE",
+      "url": "https://moe.gov.af/sites/default/files/2020-03/G10-Ps-English.pdf"
+    },
+    {
+      "id": "math-g9",
+      "title": "ریاضی — صنف 9 (نمونه)",
+      "grade": 9,
+      "subject": "ریاضی",
+      "language": "دری",
+      "source": "MOE",
+      "url": "https://moe.gov.af/sites/default/files/2020-03/G9-Ps-English.pdf"
+    },
+    {
+      "id": "english-12-1760921084697",
+      "title": "English — صنف 12",
+      "grade": null,
+      "subject": "English",
+      "url": "https://moe.gov.af/sites/default/files/2020-03/G12-Ps-English.pdf",
+      "language": "دری",
+      "source": "admin"
+    },
+    {
+      "id": "math-g9-1760921635048",
+      "title": "math-g9",
+      "grade": null,
+      "subject": "ریاضی",
+      "url": "https://moe.gov.af/sites/default/files/2020-03/G9-Ps-English.pdf",
+      "language": "دری",
+      "source": "admin"
+    },
+    {
+      "id": "math-g9-1760921642381",
+      "title": "math-g9",
+      "grade": null,
+      "subject": "ریاضی",
+      "url": "https://moe.gov.af/sites/default/files/2020-03/G9-Ps-English.pdf",
+      "language": "دری",
+      "source": "admin"
+    }
+  ]
+}

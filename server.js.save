@@ -1,3 +1,13 @@
+"scripts": {
+  "start": "node index.js"
+}
+
+^X
+^X^X^X
+^X^X^X
+
+
+
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
@@ -88,13 +98,13 @@ app.post('/api/books', async (req, res) => {
     data.books.push(book);
     await fs.writeJson(DATA_BOOKS, data, { spaces: 2 });
     res.json({ ok: true, book });
-    } catch (e) {
-  res.status(500).json({ ok: false, error: e.message });
-}
-
-app.get('/', (req, res) => {
-  res.send('Afghan School API running');
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
-module.exports = app;
-
+app.post('/api/upload', upload.single('pdf'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ ok: false, error: 'no file uploaded' });
+    res.json({ ok: true, path: req.file.path });
+  } c

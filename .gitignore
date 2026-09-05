@@ -1,5 +1,20 @@
 node_modules
 .next
-node_modules
-.next
 .vercel
+
+# Runtime data (SQLite database + uploaded homework/attachments)
+data/
+*.db
+*.db-wal
+*.db-shm
+uploads/
+
+# Environment
+.env
+.env.local
+
+# Editors / OS
+.DS_Store
+.idea
+.vscode
+*.log

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Afghan Care and School">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b4d8c"/>
+      <stop offset="1" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#g)"/>
+  <g fill="none" stroke="#ffffff" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M146 208h220v156a20 20 0 0 1-20 20H166a20 20 0 0 1-20-20z"/>
+    <path d="M256 208v176"/>
+    <path d="M170 208l14-34a14 14 0 0 1 13-9h118a14 14 0 0 1 13 9l14 34"/>
+  </g>
+  <g fill="#ffd166">
+    <circle cx="212" cy="282" r="11"/>
+    <circle cx="300" cy="282" r="11"/>
+  </g>
+  <path d="M256 318c-11 14-27 20-41 17 3 19 19 31 41 31s38-12 41-31c-14 3-30-3-41-17z" fill="#ffffff" opacity="0.92"/>
+</svg>

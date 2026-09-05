@@ -1,0 +1,26 @@
+{
+  "name": "مکتب و کلینیک من — Afghan Care & School",
+  "short_name": "Afghan Care",
+  "description": "Homework, timetable, improvement points, clinic queue and an AI tutor — in Dari, Pashto and English.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b4d8c",
+  "theme_color": "#0b4d8c",
+  "lang": "fa-AF",
+  "dir": "rtl",
+  "categories": ["education", "health", "productivity"],
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Homework", "short_name": "Homework", "url": "/#/homework" },
+    { "name": "Study tutor", "short_name": "Tutor", "url": "/#/tutor" },
+    { "name": "Queue", "short_name": "Queue", "url": "/#/queue" }
+  ]
+}

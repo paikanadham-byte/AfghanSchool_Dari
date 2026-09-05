@@ -28,7 +28,7 @@
             <div id="loginError" class="notice hidden"></div>
           </form>
           <div class="divider"></div>
-          <div class="tiny muted">${esc(t('demo_hint'))}</div>
+          <div class="row tight tiny muted" style="margin-bottom:6px">${I('info')} <span>${esc(t('demo_hint'))}</span></div>
           <div class="demo-grid" id="demoGrid"></div>
         </div>
       </div>`;
@@ -45,12 +45,17 @@
             username: qs('#loginUser', root).value.trim(),
             password: qs('#loginPass', root).value
           });
+          if (res.token) API.setToken(res.token);
           APP.setSession(res);
           toast(t('welcome_back'), 'ok');
           location.hash = '#/home';
           APP.render();
         } catch (err) {
-          errBox.textContent = err.message === 'bad_credentials' ? (I18N.lang === 'en' ? 'Wrong username or password' : 'نام کاربری یا رمز اشتباه است') : err.message;
+          const bad = err.message === 'bad_credentials' || err.status === 401;
+          errBox.innerHTML = (bad
+            ? I('alert') + ' ' + esc(t('bad_credentials'))
+            : I('alert') + ' ' + esc(err.message || 'error'))
+            + (bad ? `<div class="tiny" style="margin-top:4px;opacity:.85">${esc(t('demo_password_hint'))}</div>` : '');
           errBox.classList.remove('hidden');
         }
       };
@@ -70,6 +75,7 @@
         qsa('button', grid).forEach((b) => b.onclick = async () => {
           try {
             const res = await API.post('/api/auth/login', { username: b.dataset.u, password: 'demo1234' });
+            if (res.token) API.setToken(res.token);
             APP.setSession(res); toast(t('welcome_back'), 'ok'); location.hash = '#/home'; APP.render();
           } catch (err) { toast(err.message, 'err'); }
         });
@@ -392,7 +398,8 @@
         APP.setSession(res); APP.render();
       };
       qs('#logoutBtn', root).onclick = async () => {
-        await API.post('/api/auth/logout', {});
+        await API.post('/api/auth/logout', {}).catch(() => {});
+        API.clearToken();
         APP.session = null; API.cache.clear();
         location.hash = '#/login'; APP.render();
       };

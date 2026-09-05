@@ -8,6 +8,7 @@
     login: 'ورود', logout: 'خروج', username: 'نام کاربری', password: 'رمز عبور',
     login_help: 'با نام کاربری و رمزی که مکتب یا کلینیک داده است وارد شوید.',
     demo_login: 'ورود آزمایشی', demo_hint: 'برای دیدن نسخهٔ نمونه یکی را انتخاب کنید:',
+    bad_credentials: 'نام کاربری یا رمز اشتباه است', demo_password_hint: 'برای حساب‌های نمونه رمز demo1234 است — یا یکی از دکمه‌های پایین را لمس کنید.',
     forgot: 'رمز را فراموش کرده‌ام', remember: 'مرا به خاطر بسپار',
     school: 'مکتب', clinic: 'کلینیک / شفاخانه', hospital: 'شفاخانه',
     language: 'زبان', dari: 'دری', pashto: 'پښتو', english: 'English',
@@ -110,6 +111,7 @@
     app_name: 'زما ښوونځی او کلینیک', tagline: 'زده کړه او روغتیا په یوه اپ کې',
     login: 'ننوتل', logout: 'وتل', username: 'کارن-نوم', password: 'پټ نوم',
     login_help: 'د هغه کارن-نوم او پټ نوم سره ننوځئ چې ښوونځي یا کلینیک درکړي دي.',
+    bad_credentials: 'د کارن نوم یا پټ نوم غلط دی', demo_password_hint: 'د بېلګې حسابونو پټ نوم demo1234 دی — یا لاندې یوه تڼۍ لمس کړئ.',
     demo_login: 'ډیمو ننوتل', demo_hint: 'د بېلګې لپاره یو غوره کړئ:',
     forgot: 'پټ نوم مې هېر شوی', remember: 'زه په یاد ساته',
     school: 'ښوونځی', clinic: 'کلینیک / روغتون', hospital: 'روغتون',
@@ -212,6 +214,7 @@
   const en = {
     app_name: 'Afghan Care & School', tagline: 'Learning and health in one app',
     login: 'Sign in', logout: 'Sign out', username: 'Username', password: 'Password',
+    bad_credentials: 'Wrong username or password', demo_password_hint: 'Demo accounts use the password demo1234 — or just tap one of the buttons below.',
     login_help: 'Sign in with the username and password given by your school or clinic.',
     demo_login: 'Demo sign-in', demo_hint: 'Pick one to explore the preview:',
     forgot: 'I forgot my password', remember: 'Remember me',

@@ -24,8 +24,14 @@ function cookieHeader(req) {
 
 function setSessionCookie(res, token, days = SESSION_DAYS) {
   const maxAge = days * 24 * 60 * 60;
-  const parts = [`${COOKIE}=${encodeURIComponent(token)}`, 'Path=/', `Max-Age=${maxAge}`, 'HttpOnly', 'SameSite=Lax'];
-  if (String(process.env.COOKIE_SECURE || '0') === '1') parts.push('Secure');
+  // Behind an https proxy (or COOKIE_SECURE=1) the app may be embedded in an
+  // iframe, where a Lax cookie is treated as third-party and dropped. Use
+  // SameSite=None; Secure there so the session survives.
+  const req = res.req;
+  const viaHttps = Boolean(req) && (req.secure || String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() === 'https');
+  const secure = viaHttps || String(process.env.COOKIE_SECURE || '0') === '1';
+  const parts = [`${COOKIE}=${encodeURIComponent(token)}`, 'Path=/', `Max-Age=${maxAge}`, 'HttpOnly', secure ? 'SameSite=None' : 'SameSite=Lax'];
+  if (secure) parts.push('Secure');
   const existing = res.getHeader('Set-Cookie');
   const value = parts.join('; ');
   if (existing) {

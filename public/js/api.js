@@ -21,6 +21,16 @@
 
   const state = { online: navigator.onLine, syncing: false };
 
+  // ---------------------------------------------------------------- session --
+  // The session is sent as a cookie AND as a bearer token. The token keeps the
+  // app working when cookies are unavailable — e.g. inside an iframe, where
+  // browsers drop third-party cookies.
+  const LOGIN_PATH = /\/api\/auth\/login(\?|$)/;
+  const TOKEN_KEY = 'acs.token';
+  const getToken = () => { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } };
+  function setToken(token) { try { token ? localStorage.setItem(TOKEN_KEY, token) : localStorage.removeItem(TOKEN_KEY); } catch (e) {} }
+  function clearToken() { try { localStorage.removeItem(TOKEN_KEY); } catch (e) {} }
+
   async function request(method, path, body, opts = {}) {
     const isWrite = ['POST', 'PATCH', 'PUT', 'DELETE'].includes(method);
     const init = {
@@ -28,6 +38,8 @@
       headers: { Accept: 'application/json' },
       credentials: 'same-origin'
     };
+    const token = getToken();
+    if (token) init.headers.Authorization = 'Bearer ' + token;
     if (body !== undefined && !(body instanceof FormData)) {
       init.headers['Content-Type'] = 'application/json';
       init.body = JSON.stringify(body);
@@ -47,10 +59,17 @@
 
     try {
       const res = await fetch(path, init);
-      if (res.status === 401) { emit('unauthorised'); throw new Error('unauthorised'); }
       const text = await res.text();
       let data;
       try { data = text ? JSON.parse(text) : {}; } catch (e) { data = { ok: false, error: text }; }
+      if (res.status === 401) {
+        // A 401 from the login endpoint means bad credentials, not an expired
+        // session — keep the reason and leave the login screen alone.
+        const err = new Error(data.error || 'unauthorised');
+        err.status = 401; err.data = data;
+        if (!LOGIN_PATH.test(path)) { clearToken(); emit('unauthorised'); }
+        throw err;
+      }
       if (!res.ok) {
         const err = new Error(data.error || ('http_' + res.status));
         err.status = res.status; err.data = data;
@@ -84,6 +103,7 @@
 
   const API = {
     on, emit, state,
+    setToken, clearToken, getToken,
     get: (path, opts) => request('GET', path, undefined, opts),
     post: (path, body, opts) => request('POST', path, body, opts),
     patch: (path, body, opts) => request('PATCH', path, body, opts),

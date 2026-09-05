@@ -1,100 +1,114 @@
+'use strict';
 require('dotenv').config();
+const path = require('node:path');
+const fs = require('node:fs');
 const express = require('express');
-const path = require('path');
-const multer = require('multer');
-const bodyParser = require('body-parser');
-const fs = require('fs-extra');
 const cors = require('cors');
 const morgan = require('morgan');
-const os = require('os');
+const fse = require('fs-extra');
+
+const { migrate, get, all } = require('./src/db');
+const { attach } = require('./src/auth');
+const { runReminders } = require('./src/notify');
+const U = require('./src/util');
 
 const app = express();
-app.use(bodyParser.json());
-app.use(cors());
-app.use(morgan('dev'));
+const PORT = Number(process.env.PORT || 4000);
+const HOST = process.env.HOST || '::';   // '::' = dual stack (IPv6 + IPv4)
 
-const DATA_BOOKS = path.join(os.tmpdir(), 'books.json');
-const DATA_QUIZZES = path.join(os.tmpdir(), 'quizzes.json');
-const UPLOAD_DIR = path.join(os.tmpdir(), 'uploads');
-fs.ensureDirSync(UPLOAD_DIR);
+app.disable('x-powered-by');
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
+if (process.env.LOG_FORMAT !== 'none') app.use(morgan(process.env.LOG_FORMAT || 'tiny'));
+app.use(attach);
 
-// ensure seed
-async function ensureSeed() {
-  if (!(await fs.pathExists(DATA_BOOKS))) {
-    const seed = {
-      meta: { created: new Date().toISOString() },
-      books: [
-        { id: "en-g12", title: "English — صنف 12", grade: 12, subject: "English", language: "دری/پشتو", source: "MOE", url: "https://moe.gov.af/sites/default/files/2020-03/G12-Ps-English.pdf" },
-        { id: "en-g11", title: "English — صنف 11", grade: 11, subject: "English", language: "دری/پشتو", source: "MOE", url: "https://moe.gov.af/sites/default/files/2020-03/G11-Ps-English.pdf" },
-        { id: "en-g10", title: "English — صنف 10", grade: 10, subject: "English", language: "دری/پشتو", source: "MOE", url: "https://moe.gov.af/sites/default/files/2020-03/G10-Ps-English.pdf" },
-        { id: "math-g9", title: "ریاضی — صنف 9", grade: 9, subject: "ریاضی", language: "دری", source: "MOE", url: "https://moe.gov.af/sites/default/files/2020-03/G9-Ps-English.pdf" }
-      ]
-    };
-    await fs.writeJson(DATA_BOOKS, seed, { spaces: 2 });
-  }
-
-  if (!(await fs.pathExists(DATA_QUIZZES))) {
-    const q = {
-      meta: { created: new Date().toISOString() },
-      quizzes: [
-        {
-          id: "g9-math-1",
-          grade: 9,
-          subject: "ریاضی",
-          title: "ریاضی — نمونه سوال ۱",
-          questions: [
-            { q: "2 + 3 = ؟", options: ["3", "4", "5", "6"], answer: 2, explanation: "2 + 3 حاصلش 5 است." },
-            { q: "5 * 6 = ؟", options: ["11", "30", "20", "35"], answer: 1, explanation: "5 ضرب در 6 برابر 30 میشود." }
-          ]
-        }
-      ]
-    };
-    await fs.writeJson(DATA_QUIZZES, q, { spaces: 2 });
-  }
+// ------------------------------------------------------------ database ------
+migrate();
+const needsSeed = !get('SELECT 1 AS x FROM orgs LIMIT 1');
+if (needsSeed) {
+  console.log('[boot] empty database — seeding demo data…');
+  require('./src/seed')();
 }
 
-ensureSeed();
-
-async function readJsonSafe(p) {
-  return (await fs.readJson(p));
+// -------------------------------------------------------------- legacy ------
+// The original prototype endpoints (books.json / quizzes.json) stay available.
+const DATA_BOOKS = path.join(__dirname, 'books.json');
+const DATA_QUIZZES = path.join(__dirname, 'quizzes.json');
+async function readJson(p, fallback) {
+  try { return await fse.readJson(p); } catch { return fallback; }
 }
-
-// multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '_'))
-});
-const upload = multer({ storage });
-
-// API endpoints
 app.get('/api/books', async (req, res) => {
-  try {
-    const q = (req.query.q || '').toLowerCase();
-    const data = await readJsonSafe(DATA_BOOKS);
-    let books = (data.books || []).slice();
-    if (q) books = books.filter(b => (b.title || '').toLowerCase().includes(q));
-    res.json({ ok: true, books });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
+  const data = await readJson(DATA_BOOKS, { books: [] });
+  const q = String(req.query.q || '').toLowerCase();
+  const grade = req.query.grade;
+  let books = data.books || [];
+  if (q) books = books.filter((b) => String(b.title || '').toLowerCase().includes(q) || String(b.subject || '').toLowerCase().includes(q));
+  if (grade) books = books.filter((b) => String(b.grade) === String(grade));
+  res.json({ ok: true, books });
+});
+app.get('/api/quizzes', async (req, res) => {
+  const data = await readJson(DATA_QUIZZES, { quizzes: [] });
+  res.json({ ok: true, quizzes: data.quizzes || [] });
+});
+
+// ----------------------------------------------------------------- api ------
+app.use('/api', require('./src/routes'));
+
+// ---------------------------------------------------------------- static ----
+const PUBLIC_DIR = path.join(__dirname, 'public');
+app.use('/legacy', express.static(path.join(PUBLIC_DIR, 'legacy')));
+app.use(express.static(PUBLIC_DIR, {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('sw.js')) res.setHeader('Cache-Control', 'no-store');
   }
+}));
+
+// SPA fallback — only for navigation requests, so missing assets still 404
+app.get(/^\/(?!api).*/, (req, res, next) => {
+  if (path.extname(req.path)) return next();                       // .png, .js, .css …
+  if (!String(req.headers.accept || '').includes('text/html')) return next();
+  const file = path.join(PUBLIC_DIR, 'index.html');
+  if (!fs.existsSync(file)) return next();
+  res.setHeader('Cache-Control', 'no-cache');
+  res.sendFile(file);
 });
 
-app.post('/api/books', async (req, res) => {
+// --------------------------------------------------------------- errors -----
+app.use((err, req, res, next) => {
+  console.error('[error]', err.message);
+  const status = err.status || 500;
+  res.status(status).json({ ok: false, error: err.message || 'server_error' });
+});
+
+// ------------------------------------------------------------- reminders ----
+const REMINDER_MS = Number(process.env.REMINDER_INTERVAL_MIN || 30) * 60000;
+function tickReminders() {
   try {
-    const { title, url } = req.body;
-    if (!title || !url) return res.status(400).json({ ok: false, error: 'title and url required' });
-    const data = await readJsonSafe(DATA_BOOKS);
-    const book = { id: 'b-' + Date.now(), title, url };
-    data.books.push(book);
-    await fs.writeJson(DATA_BOOKS, data, { spaces: 2 });
-    res.json({ ok: true, book });
-    } catch (e) {
-  res.status(500).json({ ok: false, error: e.message });
+    const created = runReminders();
+    if (created) console.log(`[reminders] ${created} notification(s) created`);
+  } catch (err) {
+    console.warn('[reminders] failed', err.message);
+  }
 }
+setTimeout(tickReminders, 15000);
+setInterval(tickReminders, REMINDER_MS);
 
-app.get('/', (req, res) => {
-  res.send('Afghan School API running');
-});
+if (require.main === module) {
+  const ready = () => {
+    const orgs = all('SELECT id, type, name_en FROM orgs');
+    console.log(`\n  Afghan Care & School running on http://localhost:${PORT}`);
+    orgs.forEach((o) => console.log(`   • [${o.type}] ${o.name_en || o.id}`));
+    console.log(`   • demo login: any seeded "demo.*" account, password: demo1234`);
+    console.log(`   • AI tutor: ${process.env.OPENAI_API_KEY || process.env.AI_API_KEY ? 'LLM enabled' : 'offline engine (set OPENAI_API_KEY to upgrade)'}\n`);
+  };
+  // Prefer dual-stack; fall back to IPv4-only hosts where IPv6 is unavailable
+  const server = app.listen(PORT, HOST, ready);
+  server.on('error', (err) => {
+    if (err && (err.code === 'EAFNOSUPPORT' || err.code === 'EADDRNOTAVAIL' || err.code === 'EINVAL')) {
+      app.listen(PORT, '0.0.0.0', ready);
+    } else { console.error(err); process.exit(1); }
+  });
+}
 
 module.exports = app;
-

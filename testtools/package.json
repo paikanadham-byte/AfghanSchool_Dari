@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "jsdom": "^30.0.1",
+    "lucide-static": "^1.41.0"
+  }
+}

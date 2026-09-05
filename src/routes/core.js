@@ -343,7 +343,7 @@ router.post('/users', wrap((req, res) => {
     id: userId, org_id: user.org_id, role: q.str(req.body.role, 'student'), username, phone: q.str(req.body.phone),
     pass_hash: hash, pass_salt: salt,
     name_fa: q.str(req.body.name), name_ps: q.str(req.body.name), name_en: q.str(req.body.name_en || req.body.name),
-    email: q.str(req.body.email), avatar: q.str(req.body.avatar, '🙂'), lang: q.str(req.body.lang, 'fa'),
+    email: q.str(req.body.email), avatar: q.str(req.body.avatar, 'user'), lang: q.str(req.body.lang, 'fa'),
     prefs: '{}', is_active: 1, created_at: U.nowISO()
   });
   // school links
@@ -371,7 +371,7 @@ router.post('/users/import', wrap((req, res) => {
       insert('users', {
         id: userId, org_id: req.auth.user.org_id, role: r.role || 'student', username, phone: r.phone || null,
         pass_hash: hash, pass_salt: salt, name_fa: r.name || username, name_ps: r.name || username, name_en: r.name_en || r.name || username,
-        avatar: r.avatar || '🙂', lang: r.lang || 'fa', prefs: '{}', is_active: 1, created_at: U.nowISO()
+        avatar: r.avatar || 'user', lang: r.lang || 'fa', prefs: '{}', is_active: 1, created_at: U.nowISO()
       });
       if (r.class_id) insert('enrollments', { id: U.id('enr'), class_id: r.class_id, student_id: userId, term_id: null, created_at: U.nowISO() });
       if (r.parent_username) {

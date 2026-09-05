@@ -18,7 +18,7 @@ function user(orgId, role, username, nameFa, namePs, nameEn, extra = {}) {
     pass_hash: hash, pass_salt: salt,
     name_fa: nameFa, name_ps: namePs, name_en: nameEn,
     phone: `+937${Math.floor(10000000 + Math.random() * 89999999)}`,
-    avatar: extra.avatar || ['🙂', '😊', '🧑‍🎓', '👩‍🏫', '👨‍🏫', '🧕', '👳', '🧑‍⚕️'][Math.floor(Math.random() * 8)],
+    avatar: extra.avatar || ['user', 'graduation', 'graduation', 'userCog', 'userCog', 'userRound', 'user', 'stethoscope'][Math.floor(Math.random() * 8)],
     lang: 'fa', prefs: '{}', is_active: 1, created_at: U.nowISO(), ...extra
   });
 }
@@ -81,12 +81,12 @@ function seedSchool() {
   const [c5a, c5b, c6a, c7a] = classes;
 
   // ---- staff
-  const admin = user(org.id, 'admin', 'demo.admin', 'مدیر سیستم', 'د سیستم مدیر', 'System Admin', { avatar: '🧑‍💼' });
-  const principal = user(org.id, 'principal', 'demo.principal', 'مدیر مکتب: آقای نوری', 'د ښوونځي مدیر: نوري صاحب', 'Principal Nouri', { avatar: '🧑‍🏫' });
-  const tMath = user(org.id, 'teacher', 'demo.teacher', 'استاد احمدی (ریاضی)', 'استاد احمدي (ریاضي)', 'Mr Ahmadi (Math)', { avatar: '👨‍🏫' });
-  const tDari = user(org.id, 'teacher', 'demo.teacher2', 'استاد رحیمی (دری)', 'استاد رحیمي (دری)', 'Ms Rahimi (Dari)', { avatar: '👩‍🏫' });
-  const tSci = user(org.id, 'teacher', 'demo.teacher3', 'استاد کریمی (علوم)', 'استاد کریمي (ساینس)', 'Mr Karimi (Science)', { avatar: '🧑‍🔬' });
-  const tEng = user(org.id, 'teacher', 'demo.teacher4', 'استاد صدیقی (انگلیسی)', 'استاد صدیقي (انګلیسي)', 'Ms Sediqi (English)', { avatar: '👩‍🏫' });
+  const admin = user(org.id, 'admin', 'demo.admin', 'مدیر سیستم', 'د سیستم مدیر', 'System Admin', { avatar: 'shield' });
+  const principal = user(org.id, 'principal', 'demo.principal', 'مدیر مکتب: آقای نوری', 'د ښوونځي مدیر: نوري صاحب', 'Principal Nouri', { avatar: 'userCog' });
+  const tMath = user(org.id, 'teacher', 'demo.teacher', 'استاد احمدی (ریاضی)', 'استاد احمدي (ریاضي)', 'Mr Ahmadi (Math)', { avatar: 'graduation' });
+  const tDari = user(org.id, 'teacher', 'demo.teacher2', 'استاد رحیمی (دری)', 'استاد رحیمي (دری)', 'Ms Rahimi (Dari)', { avatar: 'graduation' });
+  const tSci = user(org.id, 'teacher', 'demo.teacher3', 'استاد کریمی (علوم)', 'استاد کریمي (ساینس)', 'Mr Karimi (Science)', { avatar: 'flask' });
+  const tEng = user(org.id, 'teacher', 'demo.teacher4', 'استاد صدیقی (انگلیسی)', 'استاد صدیقي (انګلیسي)', 'Ms Sediqi (English)', { avatar: 'graduation' });
 
   [[tMath.id, math.id, c5a.id], [tMath.id, math.id, c5b.id], [tMath.id, math.id, c6a.id],
    [tDari.id, dari.id, c5a.id], [tDari.id, pashto.id, c5b.id], [tDari.id, dari.id, c7a.id],
@@ -112,13 +112,13 @@ function seedSchool() {
     ['ثمینه ولی', 'ثمینه ولي', 'Samina Wali', c7a, 1]
   ];
   const students = STUDENTS.map(([fa, ps, en, cls, roll]) => {
-    const s = user(org.id, 'student', `demo.student${cls.grade}${cls.section === 'الف' ? 'a' : 'b'}${roll}`, fa, ps, en, { avatar: '🧑‍🎓' });
+    const s = user(org.id, 'student', `demo.student${cls.grade}${cls.section === 'الف' ? 'a' : 'b'}${roll}`, fa, ps, en, { avatar: 'graduation' });
     insert('enrollments', { id: U.id('enr'), class_id: cls.id, student_id: s.id, term_id: term.id, roll_no: roll, created_at: U.nowISO() });
     return { ...s, cls, roll };
   });
 
-  const p1 = user(org.id, 'parent', 'demo.parent', 'والدین: آقای احمدی', 'مور او پلار: احمدي صاحب', 'Parent: Mr Ahmadi', { avatar: '👨‍👩‍👧' });
-  const p2 = user(org.id, 'parent', 'demo.parent2', 'والدین: بی‌بی گل', 'مور او پلار: بي بي ګل', 'Parent: Bibi Gul', { avatar: '🧕' });
+  const p1 = user(org.id, 'parent', 'demo.parent', 'والدین: آقای احمدی', 'مور او پلار: احمدي صاحب', 'Parent: Mr Ahmadi', { avatar: 'users' });
+  const p2 = user(org.id, 'parent', 'demo.parent2', 'والدین: بی‌بی گل', 'مور او پلار: بي بي ګل', 'Parent: Bibi Gul', { avatar: 'userRound' });
   [[p1.id, 0], [p1.id, 4], [p1.id, 7], [p2.id, 1], [p2.id, 2], [p2.id, 5]].forEach(([pid, idx]) => {
     insert('guardians', { id: U.id('grd'), parent_id: pid, student_id: students[idx].id, relation: 'parent', can_message: 1, created_at: U.nowISO() });
   });
@@ -345,14 +345,14 @@ function seedClinic() {
       name_en: name.split(' / ')[1] || name, code: name.slice(0, 2), created_at: U.nowISO()
     }));
 
-  const cAdmin = user(org.id, 'clinic_admin', 'demo.clinic', 'مدیر کلینیک: داکتر صابر', 'د کلینیک مدیر: ډاکټر صابر', 'Clinic Manager Dr Saber', { avatar: '🧑‍💼' });
-  const doc = user(org.id, 'doctor', 'demo.doctor', 'داکتر احسان‌الله', 'ډاکټر احسان الله', 'Dr Ehsanullah', { avatar: '👨‍⚕️' });
-  const doc2 = user(org.id, 'doctor', 'demo.doctor2', 'داکتر شکیبا', 'ډاکټر شکیبا', 'Dr Shakiba', { avatar: '👩‍⚕️' });
-  const nurse = user(org.id, 'nurse', 'demo.nurse', 'نرس فرشته', 'نرس فرشته', 'Nurse Freshta', { avatar: '🧑‍⚕️' });
-  const recep = user(org.id, 'receptionist', 'demo.reception', 'مسئول استقبال: آقای وحید', 'د استقبال مسئول: وحید صاحب', 'Receptionist Waheed', { avatar: '🧑‍💻' });
-  const pharm = user(org.id, 'pharmacist', 'demo.pharmacist', 'دواساز: آقای طاهر', 'درمل جوړوونکی: طاهر صاحب', 'Pharmacist Tahir', { avatar: '💊' });
-  const lab = user(org.id, 'lab_tech', 'demo.lab', 'تخنیکر لابراتوار', 'د لابراتوار تخنیکر', 'Lab technician', { avatar: '🔬' });
-  const patientUser = user(org.id, 'patient', 'demo.patient', 'مریض: بی‌بی مریم', 'ناروغ: بي بي مریم', 'Patient: Bibi Maryam', { avatar: '🧕' });
+  const cAdmin = user(org.id, 'clinic_admin', 'demo.clinic', 'مدیر کلینیک: داکتر صابر', 'د کلینیک مدیر: ډاکټر صابر', 'Clinic Manager Dr Saber', { avatar: 'shield' });
+  const doc = user(org.id, 'doctor', 'demo.doctor', 'داکتر احسان‌الله', 'ډاکټر احسان الله', 'Dr Ehsanullah', { avatar: 'stethoscope' });
+  const doc2 = user(org.id, 'doctor', 'demo.doctor2', 'داکتر شکیبا', 'ډاکټر شکیبا', 'Dr Shakiba', { avatar: 'stethoscope' });
+  const nurse = user(org.id, 'nurse', 'demo.nurse', 'نرس فرشته', 'نرس فرشته', 'Nurse Freshta', { avatar: 'syringe' });
+  const recep = user(org.id, 'receptionist', 'demo.reception', 'مسئول استقبال: آقای وحید', 'د استقبال مسئول: وحید صاحب', 'Receptionist Waheed', { avatar: 'reception' });
+  const pharm = user(org.id, 'pharmacist', 'demo.pharmacist', 'دواساز: آقای طاهر', 'درمل جوړوونکی: طاهر صاحب', 'Pharmacist Tahir', { avatar: 'pill' });
+  const lab = user(org.id, 'lab_tech', 'demo.lab', 'تخنیکر لابراتوار', 'د لابراتوار تخنیکر', 'Lab technician', { avatar: 'flask' });
+  const patientUser = user(org.id, 'patient', 'demo.patient', 'مریض: بی‌بی مریم', 'ناروغ: بي بي مریم', 'Patient: Bibi Maryam', { avatar: 'userRound' });
 
   const PATIENTS = [
     ['مریم احمدی', 'مریم احمدي', 'female', '1988-04-12', 'O+', 'تب و سردردی', 1],

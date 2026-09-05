@@ -2,7 +2,7 @@
    Shared views: sign-in, notifications, messages, calendar, tasks, profile
    =========================================================================== */
 (function (global) {
-  const { h, esc, qs, qsa, toast, modal, closeModal, confirmDialog, fmt, chip, empty, bar, stat, skeleton } = UI;
+  const { h, esc, qs, qsa, toast, modal, closeModal, confirmDialog, fmt, chip, chipIcon, empty, bar, stat, skeleton } = UI;
   const VIEWS = (global.VIEWS = global.VIEWS || {});
 
   // ----------------------------------------------------------------- login --
@@ -13,11 +13,11 @@
       return `
       <div class="login-wrap">
         <div class="login-card">
-          <div class="login-logo">📚</div>
+          <div class="login-mark">${I('mark')}</div>
           <div class="login-title">${esc(t('app_name'))}</div>
           <div class="login-sub">${esc(t('tagline'))}</div>
-          <div class="lang-switch" style="background:#eef1f6; margin-bottom:12px; justify-content:center">
-            ${['fa', 'ps', 'en'].map((l) => `<button data-lang="${l}" class="${I18N.lang === l ? 'active' : ''}" style="color:${I18N.lang === l ? '#0b4d8c' : '#5b6785'}">${esc({ fa: 'دری', ps: 'پښتو', en: 'EN' }[l])}</button>`).join('')}
+          <div class="login-lang">
+            ${['fa', 'ps', 'en'].map((l) => `<button type="button" data-lang="${l}" class="${I18N.lang === l ? 'active' : ''}">${esc({ fa: 'دری', ps: 'پښتو', en: 'EN' }[l])}</button>`).join('')}
           </div>
           <form id="loginForm" class="stack">
             <div class="field"><label>${esc(t('username'))}</label>
@@ -46,7 +46,7 @@
             password: qs('#loginPass', root).value
           });
           APP.setSession(res);
-          toast(t('welcome_back') + ' 👋', 'ok');
+          toast(t('welcome_back'), 'ok');
           location.hash = '#/home';
           APP.render();
         } catch (err) {
@@ -58,15 +58,19 @@
       try {
         const { accounts } = await API.get('/api/auth/demo');
         const labels = {
-          admin: '🧑‍💼 مدیر', principal: '🏫 مدیر مکتب', teacher: '👨‍🏫 استاد', student: '🧑‍🎓 شاگرد',
-          parent: '👨‍👩‍👧 والدین', doctor: '👨‍⚕️ داکتر', nurse: '💉 نرس', receptionist: '🛎️ استقبال',
-          pharmacist: '💊 دواساز', lab_tech: '🔬 لابراتوار', clinic_admin: '🏥 مدیر کلینیک', patient: '🧕 مریض'
+          admin: ['shield', 'مدیر'], principal: ['building', 'مدیر مکتب'], teacher: ['graduation', 'استاد'],
+          student: ['backpack', 'شاگرد'], parent: ['users', 'والدین'], doctor: ['stethoscope', 'داکتر'],
+          nurse: ['syringe', 'نرس'], receptionist: ['reception', 'استقبال'], pharmacist: ['pill', 'دواساز'],
+          lab_tech: ['flask', 'لابراتوار'], clinic_admin: ['hospital', 'مدیر کلینیک'], patient: ['userRound', 'مریض']
         };
-        grid.innerHTML = accounts.map((a) => `<button data-u="${esc(a.username)}">${esc(labels[a.role] || a.role)}<br><span class="tiny muted">${esc(a.username.replace('demo.', ''))}</span></button>`).join('');
+        grid.innerHTML = accounts.map((a) => {
+          const [ic, lb] = labels[a.role] || ['user', a.role];
+          return `<button type="button" data-u="${esc(a.username)}">${I(ic)}<span>${esc(lb)}</span><span class="tiny muted">${esc(a.username.replace('demo.', ''))}</span></button>`;
+        }).join('');
         qsa('button', grid).forEach((b) => b.onclick = async () => {
           try {
             const res = await API.post('/api/auth/login', { username: b.dataset.u, password: 'demo1234' });
-            APP.setSession(res); toast(t('welcome_back') + ' 👋', 'ok'); location.hash = '#/home'; APP.render();
+            APP.setSession(res); toast(t('welcome_back'), 'ok'); location.hash = '#/home'; APP.render();
           } catch (err) { toast(err.message, 'err'); }
         });
       } catch (e) { grid.innerHTML = ''; }
@@ -75,19 +79,36 @@
 
   // ---------------------------------------------------------- notifications --
   VIEWS.notifications = {
-    id: 'notifications', icon: '🔔', label: () => t('notifications'), roles: ['*'],
+    id: 'notifications', icon: 'bell', label: () => t('notifications'), roles: ['*'],
     async render() {
       const { notifications } = await API.get('/api/notifications?limit=60');
-      if (!notifications.length) return `<div class="card">${empty('🔕', t('no_results'))}</div>`;
-      return notifications.map((n) => `
-        <div class="card tight ${n.read_at ? '' : 'accent'}" data-read="${n.id}">
-          <div class="spread">
-            <strong style="font-size:.92rem">${esc(L(n.title))}</strong>
-            <span class="tiny muted">${esc(fmt.ago(n.created_at))}</span>
+      if (!notifications.length) return `<div class="card">${empty('bellOff', t('no_results'))}</div>`;
+      const NOTIF_ICON = {
+        homework: 'homework', homework_due: 'homework', homework_graded: 'checkCircle',
+        attendance: 'clipboardCheck', absence: 'calendarX', announcement: 'megaphone',
+        message: 'messages', meeting: 'calendarClock', improvement: 'target',
+        appointment_reminder: 'calendarClock', followup_due: 'calendarClock',
+        stock_alert: 'package', vaccination_due: 'syringe', report: 'shieldAlert',
+        general: 'bell'
+      };
+      return notifications.map((n) => {
+        const ic = NOTIF_ICON[n.kind] || 'bell';
+        const tone = n.priority === 'high' ? 'danger' : n.read_at ? 'muted' : '';
+        return `<div class="card tight ${n.read_at ? '' : 'accent'}" data-read="${n.id}">
+          <div class="row" style="align-items:flex-start">
+            <span class="tile sm ${tone}">${I(ic)}</span>
+            <div class="grow" style="min-width:0">
+              <div class="spread">
+                <strong style="font-size:.92rem">${esc(L(n.title))}</strong>
+                <span class="tiny muted">${esc(fmt.ago(n.created_at))}</span>
+              </div>
+              <div class="small muted">${esc(L(n.body))}</div>
+              ${n.data && n.data.homeworkId ? `<div style="margin-top:8px"><a class="btn sm secondary" href="#/homework/${esc(n.data.homeworkId)}">${esc(t('view_all'))}</a></div>` : ''}
+            </div>
+            ${n.read_at ? '' : '<span class="unread-dot" aria-hidden="true"></span>'}
           </div>
-          <div class="small muted">${esc(L(n.body))}</div>
-          ${n.data && n.data.homeworkId ? `<div style="margin-top:8px"><a class="btn sm secondary" href="#/homework/${esc(n.data.homeworkId)}">${esc(t('view_all'))}</a></div>` : ''}
-        </div>`).join('');
+        </div>`;
+      }).join('');
     },
     mount(root) {
       qsa('[data-read]', root).forEach((card) => card.onclick = async () => {
@@ -102,7 +123,7 @@
 
   // --------------------------------------------------------------- messages --
   VIEWS.messages = {
-    id: 'messages', icon: '💬', label: () => t('messages'), roles: ['*'],
+    id: 'messages', icon: 'messages', label: () => t('messages'), roles: ['*'],
     async render(ctx) {
       if (ctx.params.id) {
         const { thread, messages } = await API.get(`/api/threads/${ctx.params.id}/messages`);
@@ -117,7 +138,7 @@
                 ${m.sender_id !== APP.session.user.id ? `<div class="tiny" style="opacity:.7">${esc(m.sender?.name_fa || '')}</div>` : ''}
                 ${esc(m.body)}
                 <div class="tiny" style="opacity:.65;margin-top:4px">${esc(fmt.ago(m.created_at))}</div>
-              </div>`).join('') || empty('💬', t('empty_general'))}
+              </div>`).join('') || empty('messages', t('empty_general'))}
           </div>
           <div class="card tight">
             <div class="chat-input">
@@ -127,10 +148,10 @@
           </div>`;
       }
       const { threads } = await API.get('/api/threads');
-      if (!threads.length) return `<div class="card">${empty('💬', t('empty_general'))}</div>`;
+      if (!threads.length) return `<div class="card">${empty('messages', t('empty_general'))}</div>`;
       return `<div class="card"><div class="list">${threads.map((th) => `
         <div class="list-item" data-thread="${th.id}">
-          <div class="avatar">💬</div>
+          <div class="avatar">${I('messages')}</div>
           <div class="body">
             <div class="title">${esc(th.others.map((o) => o.name).join(', ') || th.subject || t('messages'))}</div>
             <div class="sub truncate">${esc(th.last_message ? th.last_message.body : (th.subject || ''))}</div>
@@ -182,24 +203,24 @@
 
   // --------------------------------------------------------------- calendar --
   VIEWS.calendar = {
-    id: 'calendar', icon: '📅', label: () => t('calendar'), roles: ['*'],
+    id: 'calendar', icon: 'calendar', label: () => t('calendar'), roles: ['*'],
     async render() {
       const [{ events }, { announcements }] = await Promise.all([
         API.get(`/api/calendar?from=${fmt.addDays(fmt.todayISO(), -30)}&to=${fmt.addDays(fmt.todayISO(), 180)}`),
         API.get('/api/announcements?limit=20')
       ]);
-      const icons = { holiday: '🎉', exam: '📝', event: '📌', vacation: '🏖️', deadline: '⏰', camp: '🏕️' };
+      const icons = { holiday: 'party', exam: 'homework', event: 'pin', vacation: 'palette', deadline: 'alarm', camp: 'tent' };
       const kinds = { holiday: 'ok', exam: 'danger', event: 'info', vacation: 'warn', deadline: 'info' };
       const upcoming = events.map((e) => `
         <div class="card tight">
           <div class="spread">
-            <div><span style="font-size:18px">${icons[e.type] || '📌'}</span>
+            <div><span class="tile sm ${e.type === 'exam' ? 'danger' : e.type === 'holiday' ? 'ok' : 'info'}">${I(icons[e.type] || 'pin')}</span>
               <strong style="font-size:.95rem">${esc(L(e.title))}</strong></div>
             ${chip(fmt.date(e.date), kinds[e.type] || 'grey')}
           </div>
           <div class="tiny muted">${esc(fmt.weekday(e.date))} · ${esc(fmt.gregorian(e.date))}</div>
           ${e.body ? `<div class="small" style="margin-top:6px">${esc(L(e.body))}</div>` : ''}
-        </div>`).join('') || empty('📅', t('no_results'));
+        </div>`).join('') || empty('calendar', t('no_results'));
 
       const anns = announcements.map((a) => `
         <div class="card tight ${a.is_pinned ? 'accent' : ''}">
@@ -215,7 +236,7 @@
 
   // ------------------------------------------------------------------ tasks --
   VIEWS.tasks = {
-    id: 'tasks', icon: '✅', label: () => t('tasks'), roles: ['student', 'teacher', 'parent', 'admin', 'principal'],
+    id: 'tasks', icon: 'checkCircle', label: () => t('tasks'), roles: ['student', 'teacher', 'parent', 'admin', 'principal'],
     async render() {
       const { tasks } = await API.get('/api/school/tasks');
       const open = tasks.filter((x) => !x.is_done);
@@ -237,12 +258,12 @@
             <div class="avatar"><input type="checkbox" data-done="${x2.id}" ${x2.is_done ? 'checked' : ''} style="width:22px;height:22px"/></div>
             <div class="body"><div class="title">${esc(x2.title)}</div>
               <div class="sub">${x2.due_date ? esc(fmt.date(x2.due_date)) : ''} ${x2.priority === 'high' ? chip(t('high'), 'danger') : ''}</div></div>
-            <button class="icon-btn" data-del="${x2.id}" style="background:#fdeaea;color:#dc2626">🗑</button>
-          </div>`).join('')}</div></div>` : `<div class="card">${empty('✅', t('no_results'))}</div>`}
+            <button class="tile sm danger" type="button" data-del="${x2.id}" aria-label="${esc(t('delete'))}">${I('trash')}</button>
+          </div>`).join('')}</div></div>` : `<div class="card">${empty('checkCircle', t('no_results'))}</div>`}
         ${done.length ? `<div class="section-title">${esc(t('done'))}</div><div class="card"><div class="list">${done.map((x2) => `
           <div class="list-item"><div class="avatar"><input type="checkbox" data-done="${x2.id}" checked style="width:22px;height:22px"/></div>
           <div class="body"><div class="title" style="text-decoration:line-through;opacity:.6">${esc(x2.title)}</div></div>
-          <button class="icon-btn" data-del="${x2.id}" style="background:#f4f6fb;color:#8b95ad">🗑</button></div>`).join('')}</div></div>` : ''}`;
+          <button class="tile sm muted" type="button" data-del="${x2.id}" aria-label="${esc(t('delete'))}">${I('trash')}</button></div>`).join('')}</div></div>` : ''}`;
     },
     mount(root) {
       qs('#taskAdd', root).onclick = async () => {
@@ -264,7 +285,7 @@
 
   // ---------------------------------------------------------------- profile --
   VIEWS.profile = {
-    id: 'profile', icon: '👤', label: () => t('profile'), roles: ['*'],
+    id: 'profile', icon: 'user', label: () => t('profile'), roles: ['*'],
     async render() {
       const s = APP.session;
       const name = s.view.name_fa || s.view.username;
@@ -277,7 +298,7 @@
       return `
         <div class="card">
           <div class="row">
-            <div class="avatar-lg">${esc(s.view.avatar || '🙂')}</div>
+            <div class="avatar-lg">${I(s.view.avatar || 'user')}</div>
             <div class="grow">
               <h2 style="margin:0">${esc(name)}</h2>
               <div class="small muted">${esc(roleLabel)} · ${esc(L(s.org?.name_fa) || '')}</div>
@@ -297,6 +318,11 @@
 
         <div class="card">
           <h3>${esc(t('appearance'))}</h3>
+          <div class="segmented" id="themeSeg" style="margin-bottom:6px">
+            <button data-theme="auto" class="${(prefs.theme || 'auto') === 'auto' ? 'active' : ''}">${I('contrast')} ${esc(t('theme_auto'))}</button>
+            <button data-theme="light" class="${prefs.theme === 'light' ? 'active' : ''}">${I('sun')} ${esc(t('theme_light'))}</button>
+            <button data-theme="dark" class="${prefs.theme === 'dark' ? 'active' : ''}">${I('moon')} ${esc(t('theme_dark'))}</button>
+          </div>
           <div class="kv"><span class="k">${esc(t('lite_mode'))}</span><input type="checkbox" id="prefLite" ${prefs.lite ? 'checked' : ''} style="width:22px;height:22px"/></div>
           <div class="kv"><span class="k">${esc(t('large_text'))}</span><input type="checkbox" id="prefBig" ${prefs.big ? 'checked' : ''} style="width:22px;height:22px"/></div>
           <div class="kv"><span class="k">${esc(t('read_aloud_mode'))}</span><input type="checkbox" id="prefSpeak" ${prefs.speak !== false ? 'checked' : ''} style="width:22px;height:22px"/></div>
@@ -321,7 +347,7 @@
         <div class="card">
           <h3>${esc(t('about'))}</h3>
           <div class="kv"><span class="k">${esc(t('version'))}</span><span class="v">2.0.0</span></div>
-          <div class="kv"><span class="k">${esc(t('offline'))}</span><span class="v">${navigator.onLine ? '—' : '✓'}</span></div>
+          <div class="kv"><span class="k">${esc(t('offline'))}</span><span class="v">${I(navigator.onLine ? 'wifi' : 'wifiOff')}</span></div>
           <div class="kv"><span class="k">${esc(t('install'))}</span><span class="v"><button class="btn sm secondary" id="installBtn">${esc(t('install'))}</button></span></div>
         </div>
 
@@ -336,11 +362,17 @@
         const prefs = {
           lite: qs('#prefLite', root).checked,
           big: qs('#prefBig', root).checked,
-          speak: qs('#prefSpeak', root).checked
+          speak: qs('#prefSpeak', root).checked,
+          theme: qs('#themeSeg button.active', root)?.dataset.theme || 'auto'
         };
         APP.applyPrefs(prefs);
         await API.post('/api/auth/prefs', { prefs });
       };
+      qsa('#themeSeg button', root).forEach((b) => b.onclick = () => {
+        qsa('#themeSeg button', root).forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+        savePref();
+      });
       ['prefLite', 'prefBig', 'prefSpeak'].forEach((id) => { const el = qs('#' + id, root); if (el) el.onchange = savePref; });
 
       qs('#pwSave', root).onclick = async () => {
@@ -370,14 +402,14 @@
 
   // ------------------------------------------------------------------ more --
   VIEWS.more = {
-    id: 'more', icon: '☰', label: () => t('more'), roles: ['*'], hidden: true,
+    id: 'more', icon: 'grid', label: () => t('more'), roles: ['*'], hidden: true,
     render() {
       const items = APP.menuForRole().filter((v) => !v.hidden);
       return `<div class="card"><div class="list">${items.map((v) => `
         <div class="list-item" data-go="${v.id}">
-          <div class="avatar">${v.icon || '•'}</div>
+          <span class="tile">${I(v.icon || 'dot')}</span>
           <div class="body"><div class="title">${esc(v.label())}</div></div>
-          <span class="muted">›</span>
+          <span class="chev">${I('chevron')}</span>
         </div>`).join('')}</div></div>`;
     },
     mount(root) {

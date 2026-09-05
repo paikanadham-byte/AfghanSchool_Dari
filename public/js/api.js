@@ -35,7 +35,7 @@
       init.body = body;
     }
 
-    // ---- offline write → queue it and return an optimistic ack -------------
+    // ---- offline write: queue it and return an optimistic ack --------------
     if (isWrite && (!state.online || opts.queue === true)) {
       const queued = { id: 'q_' + Date.now() + Math.random().toString(36).slice(2, 6), method, path, body, createdAt: Date.now() };
       const outbox = readJSON(OUTBOX_KEY, []);

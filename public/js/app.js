@@ -29,6 +29,11 @@
       const saved = localStorage.getItem('acs.lang');
       I18N.init(saved || 'fa');
       APP.applyPrefs(JSON.parse(localStorage.getItem('acs.prefs') || '{}'));
+      if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => {
+          APP.applyPrefs(JSON.parse(localStorage.getItem('acs.prefs') || '{}'));
+        });
+      }
 
       window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); APP.installPrompt = e; });
       window.addEventListener('hashchange', () => APP.render());
@@ -36,7 +41,7 @@
       API.on('offline', () => APP.updateOfflineBar());
       API.on('online', () => { APP.updateOfflineBar(); toast(t('online'), 'ok'); });
       API.on('outbox', () => APP.updateOfflineBar());
-      API.on('synced', (n) => toast(`${n} ✓ ${t('synced')}`, 'ok'));
+      API.on('synced', (n) => toast(`${n} ${t('synced')}`, 'ok'));
 
       if (!location.hash) location.hash = '#/home';
       try {
@@ -62,6 +67,10 @@
     applyPrefs(prefs) {
       document.body.classList.toggle('lite', !!prefs.lite);
       document.body.classList.toggle('big', !!prefs.big);
+      const theme = prefs.theme || 'auto';
+      const dark = theme === 'dark' ||
+        (theme === 'auto' && !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches));
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
       localStorage.setItem('acs.prefs', JSON.stringify(prefs));
     },
 
@@ -135,8 +144,10 @@
       } catch (err) {
         console.error(err);
         main.innerHTML = `<div class="card">
-          <div class="empty"><span class="emoji">⚠️</span>${esc(err.message || 'error')}</div>
-          <button class="btn block" onclick="location.reload()">${esc(t('retry'))}</button>
+          ${UI.empty('alert', err.message || 'error')}
+          <div class="btn-group" style="margin-top:10px">
+            <button class="btn" onclick="location.reload()">${I('refresh')} ${esc(t('retry'))}</button>
+          </div>
         </div>`;
       }
       APP.refreshBadge();
@@ -149,22 +160,24 @@
       const unread = s.unread?.total || 0;
       const isChild = s.is_viewing_child;
       const orgName = L(s.org?.name_fa) || '';
+      const org = esc(orgName || t('app_name'));
       return `
       <header class="topbar">
         <div class="row">
-          <div class="brand"><span class="logo">${APP.module === 'clinic' ? '🏥' : '📚'}</span>
-            <span class="truncate">${esc(orgName || t('app_name'))}</span></div>
-          <div class="grow"></div>
+          <div class="brand">
+            <span class="logo">${I(APP.module === 'clinic' ? 'hospital' : 'graduation')}</span>
+            <span class="grow truncate">${org}</span>
+          </div>
           <div class="lang-switch">
             ${['fa', 'ps', 'en'].map((l) => `<button data-lang-btn="${l}" class="${I18N.lang === l ? 'active' : ''}">${esc({ fa: 'دری', ps: 'پښ', en: 'EN' }[l])}</button>`).join('')}
           </div>
-          <button class="icon-btn" id="bellBtn">🔔${unread ? `<span class="badge-dot">${unread}</span>` : ''}</button>
-          <button class="icon-btn" id="menuBtn">${esc(s.view?.avatar || '👤')}</button>
+          <button class="glass-btn" id="bellBtn" aria-label="${esc(t('notifications'))}">${I('bell')}${unread ? `<span class="badge-dot">${unread}</span>` : ''}</button>
+          <button class="glass-btn" id="menuBtn" aria-label="${esc(t('profile'))}">${I(s.view?.avatar || 'user')}</button>
         </div>
-        ${isChild ? `<div class="row" style="margin-top:8px">
-          <span class="hero-badge">👦 ${esc(s.view.name_fa || '')}</span>
+        ${isChild ? `<div class="child-bar">
+          <span class="hero-badge">${I('baby')} ${esc(s.view.name_fa || '')}</span>
           <div class="grow"></div>
-          <button class="hero-badge" id="backChild" style="border:0;cursor:pointer">${esc(t('back_to_parent'))}</button>
+          <button class="hero-badge" id="backChild" type="button">${I('arrowLeft')} ${esc(t('back_to_parent'))}</button>
         </div>` : ''}
       </header>`;
     },
@@ -174,12 +187,18 @@
       const items = (NAV[role] || NAV.student);
       const view = APP.viewFor(activeRoute);
       const activeId = view.id === 'home_clinic' ? 'home' : view.id;
-      const icons = { home: '🏠', homework: '📝', timetable: '🗓', tutor: '🤖', more: '☰', classes: '🏫', admin: '⚙️', calendar: '📅', messages: '💬', attendance: '✅', queue: '🎫', patients: '🗂', pharmacy: '💊', appointments: '📅' };
+      const icons = {
+        home: 'home', homework: 'homework', timetable: 'calendarDays', tutor: 'bot', more: 'grid',
+        classes: 'school', admin: 'settings', calendar: 'calendar', messages: 'messages',
+        attendance: 'clipboardCheck', queue: 'token', patients: 'folderOpen', pharmacy: 'pill',
+        appointments: 'calendarClock', notifications: 'bell', tasks: 'listChecks', library: 'library',
+        profile: 'user', progress: 'trending', board: 'board', quizzes: 'target'
+      };
       return `<nav class="bottomnav">
         ${[...new Set(items)].map((key) => {
           const v = APP.viewFor(key);
           return `<button data-nav="${key}" class="${activeId === key ? 'active' : ''}">
-            <span class="ic">${icons[key] || '•'}</span><span>${esc(v.label ? v.label() : key)}</span>
+            <span class="ic-wrap">${I(icons[key] || 'dot')}</span><span>${esc(v.label ? v.label() : key)}</span>
           </button>`;
         }).join('')}
       </nav>`;
@@ -203,13 +222,12 @@
 
     updateOfflineBar() {
       const bar = qs('#offline-bar');
-      const text = qs('#offline-text');
       if (!bar) return;
       const pending = API.outbox.size();
       if (!navigator.onLine || pending) {
         bar.classList.remove('hidden');
         const label = navigator.onLine ? `${pending} ${t('syncing')}` : t('offline');
-        text.textContent = pending ? `${label} · ${pending}` : label;
+        bar.innerHTML = `${I(navigator.onLine ? 'refresh' : 'wifiOff')}<span>${esc(label)}</span>`;
         if (navigator.onLine && pending) APP.outboxFlushSoon();
       } else {
         bar.classList.add('hidden');

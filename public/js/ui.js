@@ -28,9 +28,13 @@
   }
 
   // ---------------------------------------------------------------- toast --
+  const TOAST_ICON = { ok: 'checkCircle', err: 'alert', warn: 'alert', '': 'info' };
+
   function toast(message, type = '', ms = 2600) {
     const box = qs('#toasts');
-    const el = h('div', { class: 'toast ' + type, html: esc(message) });
+    const el = h('div', { class: 'toast ' + type },
+      h('span', { class: 'ic-slot', html: I(TOAST_ICON[type] || 'info') }),
+      h('span', { html: esc(message) }));
     box.appendChild(el);
     setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(-6px)'; setTimeout(() => el.remove(), 250); }, ms);
   }
@@ -42,7 +46,7 @@
     const bodyEl = typeof body === 'string' ? h('div', { html: body }) : body;
     const head = h('div', { class: 'modal-head' },
       h('h3', {}, title || ''),
-      h('button', { class: 'icon-btn', style: { background: '#eef1f6', color: '#5b6785' }, onclick: closeModal }, '✕'));
+      h('button', { class: 'glass-btn ghost-close', 'aria-label': t('close') || 'close', onclick: closeModal, html: I('close') }));
     const foot = h('div', { class: 'stack', style: { marginTop: '12px' } });
     actions.forEach((a) => foot.appendChild(
       h('button', { class: 'btn ' + (a.kind || 'secondary') + ' block', onclick: () => { if (a.onClick) a.onClick(closeModal); else closeModal(); } }, a.label)
@@ -148,15 +152,19 @@
 
   // ------------------------------------------------------------ fragments --
   const chip = (text, kind = '') => `<span class="chip ${kind}">${esc(text)}</span>`;
-  const empty = (emoji, text) => `<div class="empty"><span class="emoji">${emoji}</span>${esc(text || t('empty_general'))}</div>`;
+  /** Chip with a leading icon: chipIcon('alert', 'Penicillin', 'danger') */
+  const chipIcon = (icon, text, kind = '') => `<span class="chip ${kind}">${I(icon || 'dot')}${esc(text)}</span>`;
+  const empty = (icon, text) => `<div class="empty"><div class="empty-ic">${I(icon || 'search')}</div>${esc(text || t('empty_general'))}</div>`;
+  const tile = (icon, kind = '') => `<span class="tile ${kind}">${I(icon)}</span>`;
+  const iconBtn = (icon, cls = '') => `<button class="glass-btn ${cls}" type="button">${I(icon)}</button>`;
   const bar = (pct, kind = '') => `<div class="bar ${kind}"><i style="width:${Math.max(0, Math.min(100, pct))}%"></i></div>`;
   const stat = (n, label) => `<div class="stat"><div class="n">${esc(n)}</div><div class="l">${esc(label)}</div></div>`;
-  const skeleton = (n = 3) => Array.from({ length: n }, () => '<div class="card tight"><div class="bar"><i style="width:60%"></i></div></div>').join('');
+  const skeleton = (n = 3) => Array.from({ length: n }, () => '<div class="card"><div class="skeleton-line" style="width:45%"></div><div class="skeleton-box"></div></div>').join('');
 
   // ---------------------------------------------------------- read aloud ---
   let speaking = false;
   function speak(text, onEnd) {
-    if (!('speechSynthesis' in window)) { toast(t('read_aloud') + ' — ✕'); return; }
+    if (!('speechSynthesis' in window)) { toast(t('not_supported'), 'warn'); return; }
     if (speaking) { window.speechSynthesis.cancel(); speaking = false; if (onEnd) onEnd(); return; }
     const u = new SpeechSynthesisUtterance(String(text).replace(/<[^>]+>/g, '').slice(0, 1200));
     u.lang = { fa: 'fa-IR', ps: 'ps-AF', en: 'en-US' }[I18N.lang] || 'fa-IR';
@@ -193,16 +201,15 @@
           resolve(new File([blob], `voice-${Date.now()}.webm`, { type: 'audio/webm' }));
         };
         recorder.start();
-        toast('● Recording… press stop', 'warn', 3000);
+        toast(t('recording'), 'warn', 3000);
       }).catch(reject);
     });
   }
   function stopRecording() { if (recorder && recorder.state !== 'inactive') recorder.stop(); }
 
   // ----------------------------------------------------------- helpers -----
-  function initials(name, emoji) {
-    if (emoji) return emoji;
-    return String(name || '?').trim().split(/\s+/).slice(0, 1).map((w) => w[0]).join('').toUpperCase();
+  function initials(name) {
+    return String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   }
   function progressRing(pct, label) {
     return `<div class="progress-ring" style="--p:${Math.max(0, Math.min(100, pct))}"><span>${esc(label ?? pct + '%')}</span></div>`;
@@ -221,5 +228,5 @@
     return out;
   }
 
-  global.UI = { h, esc, qs, qsa, toast, modal, closeModal, confirmDialog, fmt, chip, empty, bar, stat, skeleton, speak, pickFile, recordAudio, stopRecording, initials, progressRing, localisedInput, readLocalised, toJalali, afWeekday, toPersianDigits };
+  global.UI = { h, esc, qs, qsa, toast, modal, closeModal, confirmDialog, fmt, chip, chipIcon, empty, tile, iconBtn, bar, stat, skeleton, speak, pickFile, recordAudio, stopRecording, initials, progressRing, localisedInput, readLocalised, toJalali, afWeekday, toPersianDigits };
 })(window);

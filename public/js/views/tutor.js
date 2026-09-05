@@ -2,13 +2,13 @@
    AI tutor / health assistant — explains, teaches, never does the work
    =========================================================================== */
 (function (global) {
-  const { h, esc, qs, qsa, toast, modal, fmt, chip, empty } = UI;
+  const { h, esc, qs, qsa, toast, modal, fmt, chip, chipIcon, empty } = UI;
   const VIEWS = (global.VIEWS = global.VIEWS || {});
 
   const state = { conversationId: null, messages: [], homeworkId: null, busy: false, lastMessageId: null };
 
   VIEWS.tutor = {
-    id: 'tutor', icon: '🤖', label: () => (APP.session && APP.module === 'clinic' ? t('health_assistant') : t('tutor')), roles: ['*'],
+    id: 'tutor', icon: 'bot', label: () => (APP.session && APP.module === 'clinic' ? t('health_assistant') : t('tutor')), roles: ['*'],
     async render(ctx) {
       const isClinic = APP.module === 'clinic';
       state.homeworkId = ctx.query.hw || null;
@@ -20,7 +20,7 @@
       return `
       <div class="card accent">
         <div class="row">
-          <div class="avatar-lg" style="width:44px;height:44px;font-size:24px">${isClinic ? '🩺' : '🤖'}</div>
+          <div class="tile lg">${I(isClinic ? 'stethoscope' : 'bot')}</div>
           <div class="grow">
             <strong>${esc(isClinic ? t('health_assistant') : t('tutor'))}</strong>
             <div class="tiny">${esc(isClinic ? t('emergency_note') : t('tutor_intro'))}</div>
@@ -35,7 +35,7 @@
         <div class="chat" id="chatLog">
           ${state.messages.map((m) => `
             <div class="bubble ${m.role === 'user' ? 'user' : 'bot'}">${esc(m.content)}
-              ${m.role === 'assistant' ? `<div style="margin-top:6px"><button class="speak-btn" data-speak="${esc(m.content.slice(0, 40))}">🔊 ${esc(t('read_aloud'))}</button></div>` : ''}
+              ${m.role === 'assistant' ? `<div style="margin-top:6px"><button class="speak-btn" data-speak="${esc(m.content.slice(0, 40))}">${I('volume')} ${esc(t('read_aloud'))}</button></div>` : ''}
             </div>`).join('')}
         </div>
         <div class="suggestions" id="suggestions"></div>
@@ -58,12 +58,12 @@
             <div style="min-width:0"><div class="tiny muted">${esc(t('about_task'))}</div>
               <strong class="small">${esc(L(hw.title))}</strong>
               <div class="tiny muted">${esc(L(hw.subject_fa) || '')} · ${esc(t('due'))}: ${esc(fmt.date(hw.due_at))}</div></div>
-            <a class="btn sm ghost" href="#/homework/${esc(hw.id)}">📝</a>
+            <a class="btn sm ghost" href="#/homework/${esc(hw.id)}">${I('homework')}</a>
           </div>
           <div class="row wrap" style="margin-top:8px;gap:6px">
-            <button class="btn sm secondary" data-ask="${esc(t('explain_task'))}">📖 ${esc(t('explain_task'))}</button>
-            <button class="btn sm secondary" data-ask="${esc(t('steps'))}">🧭 ${esc(t('steps'))}</button>
-            <button class="btn sm secondary" data-ask="${esc(t('similar_example'))}">🔎 ${esc(t('similar_example'))}</button>
+            <button class="btn sm secondary" data-ask="${esc(t('explain_task'))}">${I('bookOpen')} ${esc(t('explain_task'))}</button>
+            <button class="btn sm secondary" data-ask="${esc(t('steps'))}">${I('compass')} ${esc(t('steps'))}</button>
+            <button class="btn sm secondary" data-ask="${esc(t('similar_example'))}">${I('searchHelp')} ${esc(t('similar_example'))}</button>
           </div>
         </div>`;
       } catch (e) { return ''; }
@@ -133,7 +133,7 @@
       if (!log) return;
       log.innerHTML = state.messages.map((m) => `
         <div class="bubble ${m.role === 'user' ? 'user' : 'bot'}">${esc(m.content)}
-          ${m.role === 'assistant' ? `<div style="margin-top:6px"><button class="speak-btn" data-speak="1">🔊 ${esc(t('read_aloud'))}</button></div>` : ''}
+          ${m.role === 'assistant' ? `<div style="margin-top:6px"><button class="speak-btn" data-speak="1">${I('volume')} ${esc(t('read_aloud'))}</button></div>` : ''}
         </div>`).join('');
       qsa('[data-speak]', log).forEach((b) => b.onclick = (e) => {
         UI.speak(e.target.closest('.bubble').textContent.replace(t('read_aloud'), '').trim());

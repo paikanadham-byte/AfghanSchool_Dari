@@ -1,11 +1,12 @@
 /* Afghan Care & School — service worker.
    Precaches the app shell so the app opens with no signal, serves API GETs
    from cache when offline, and never caches write requests. */
-const VERSION = 'acs-v2.0.0';
+const VERSION = 'acs-v2.1.0';
 const SHELL = [
   '/',
   '/index.html',
   '/css/styles.css',
+  '/js/icons.js',
   '/js/i18n.js',
   '/js/api.js',
   '/js/ui.js',
@@ -16,7 +17,8 @@ const SHELL = [
   '/js/views/tutor.js',
   '/manifest.webmanifest',
   '/icons/icon.svg',
-  '/icons/icon-192.png'
+  '/icons/icon-192.png',
+  '/icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {

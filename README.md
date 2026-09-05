@@ -34,6 +34,7 @@ Solar Hijri (Jalali) dates and the Afghan Saturday–Friday week.
 * **Refuses** "solve it for me / give me the answer" in all three languages and explains why — then offers four ways to get real help. Every refusal is logged.
 * Runs **fully offline** by default (built-in curriculum knowledge bank: algebra, fractions, geometry, photosynthesis, water cycle, essay writing, English grammar, history method + study coaching).
 * Drop in `OPENAI_API_KEY` (or any OpenAI-compatible endpoint / local Ollama) and it upgrades to an LLM — the same guardrails still apply.
+* Regenerate the icon set with `node testtools/gen-icons.js` (needs `lucide-static`).
 * In the clinic module it becomes a **health-information assistant**: general guidance only, never a diagnosis, with red-flag detection (chest pain, breathing difficulty, fits, heavy bleeding, poisoning, pregnancy bleeding, high fever) that tells the user to go to the clinic now.
 
 ### 🌐 Built for Afghanistan's reality
@@ -95,6 +96,7 @@ runs the end-to-end write flows. See [`testtools/README.md`](testtools/README.md
 
 * **Backend** Node.js 22 + Express + SQLite (`node:sqlite`, no native build step) — one file-based database, WAL mode.
 * **Frontend** Zero-build vanilla JS PWA (service worker + cache + outbox). No bundler, no npm install to deploy the client.
+* **Design** One token-based design system in `public/css/styles.css`: light + dark themes, school (indigo) and clinic (teal) palettes, low-end "lite" mode and large-text mode. Every icon is an inline SVG from `public/js/icons.js` — the interface contains **no emoji**, and no fonts or images are fetched at runtime.
 * **Auth** Session cookie (`httpOnly`) or `Authorization: Bearer` token, scrypt password hashing, role + organisation scoping on every query.
 * **AI** Pluggable: offline rule engine ⇢ optional OpenAI-compatible LLM.
 
@@ -131,7 +133,9 @@ public/
   manifest.webmanifest  Install metadata
   css/styles.css        RTL-aware mobile design, lite & large-text modes
   js/                   app shell, router, i18n, UI kit, views (school/clinic/tutor)
+  js/icons.js           generated stroke-icon set (no emoji anywhere in the UI)
   icons/                App icons
+  design-preview.html   Component gallery (light + dark), served at /design-preview.html
 data/                   app.db + uploads (git-ignored)
 ```
 

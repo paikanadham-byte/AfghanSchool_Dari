@@ -14,7 +14,7 @@ const U = require('./src/util');
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
-const HOST = process.env.HOST || '0.0.0.0';
+const HOST = process.env.HOST || '::';   // '::' = dual stack (IPv6 + IPv4)
 
 app.disable('x-powered-by');
 app.use(cors({ origin: true, credentials: true }));
@@ -95,12 +95,19 @@ setTimeout(tickReminders, 15000);
 setInterval(tickReminders, REMINDER_MS);
 
 if (require.main === module) {
-  app.listen(PORT, HOST, () => {
+  const ready = () => {
     const orgs = all('SELECT id, type, name_en FROM orgs');
     console.log(`\n  Afghan Care & School running on http://localhost:${PORT}`);
     orgs.forEach((o) => console.log(`   • [${o.type}] ${o.name_en || o.id}`));
     console.log(`   • demo login: any seeded "demo.*" account, password: demo1234`);
     console.log(`   • AI tutor: ${process.env.OPENAI_API_KEY || process.env.AI_API_KEY ? 'LLM enabled' : 'offline engine (set OPENAI_API_KEY to upgrade)'}\n`);
+  };
+  // Prefer dual-stack; fall back to IPv4-only hosts where IPv6 is unavailable
+  const server = app.listen(PORT, HOST, ready);
+  server.on('error', (err) => {
+    if (err && (err.code === 'EAFNOSUPPORT' || err.code === 'EADDRNOTAVAIL' || err.code === 'EINVAL')) {
+      app.listen(PORT, '0.0.0.0', ready);
+    } else { console.error(err); process.exit(1); }
   });
 }
 

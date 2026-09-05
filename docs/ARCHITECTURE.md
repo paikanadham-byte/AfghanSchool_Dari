@@ -63,6 +63,30 @@
 * All timestamps ISO-8601 UTC; dates `YYYY-MM-DD`. Jalali conversion happens at the edges
   (server for notifications, client for display).
 
+## 2b. Frontend design system
+
+The client is a zero-build vanilla JS app, but it is built on one token-based stylesheet
+(`public/css/styles.css`) so every screen stays consistent.
+
+| Layer | What lives there |
+|---|---|
+| Tokens | `--brand-*`, `--ok/warn/danger/info`, `--surface*`, `--ink*`, `--line*`, radii `--r-*`, shadows `--sh-*`, motion `--dur`/`--ease` |
+| Themes | `:root` (light), `[data-theme="dark"]`, `body.clinic` (teal instead of indigo), `body.lite` (no shadows/animation), `body.big` (18px base). Theme is auto/light/dark, chosen in Profile and stored in `acs.prefs`. |
+| Primitives | `.card`, `.tile`, `.btn`, `.chip`, `.field`, `.list-item`, `.avatar`, `.stat`, `.bar`, `.notice`, `.segmented`, `.tabs` |
+| Components | `.topbar` (gradient app bar), `.hero` + `.hero-stat`, `.bottomnav` (glass, active pill), `.modal` (bottom sheet), `.toast`, `.bubble` (chat), `.token-card`, `.tt-*` (timetable), `.board` |
+
+* **Icons, never emoji** — `public/js/icons.js` ships ~200 stroke icons as inline SVG
+  (`currentColor`, 24×24). `I('home')` returns markup, so views call `${I('home')}` inside template
+  strings. Unknown names fall back to a neutral dot, so a stale value in the database can never
+  render garbage. Regenerate with `node testtools/gen-icons.js` (reads `lucide-static`, MIT).
+* **RTL first** — logical properties everywhere (`margin-inline`, `inset-inline`, `border-end-*`);
+  switching language flips `dir` and the whole layout mirrors.
+* **No runtime asset requests** — system fonts only; the service worker precaches the shell
+  (`acs-v2.1.0`) and API `GET`s are served from cache when offline.
+* **Component gallery** — `/design-preview.html` renders the real components in light and dark
+  side by side, using the same stylesheet and icon set. Handy for reviewing the design without
+  signing in.
+
 ## 3. Request flow
 
 ```

@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"/>
-<title>مکتب و کلینیک من | زما ښوونځی او کلینیک | My School & Clinic</title>
+<title>مکتب و کلینیک من | زما ښوونځی او کلینیک | My School &amp; Clinic</title>
 <meta name="description" content="Offline-first school, hospital and clinic app for Afghanistan — homework, timetable, improvement points, queue tokens, pharmacy and an AI tutor that explains without doing the work."/>
-<meta name="theme-color" content="#0b4d8c"/>
+<meta name="theme-color" content="#1e40af"/>
+<meta name="color-scheme" content="light dark"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="Afghan Care"/>
@@ -13,10 +14,23 @@
 <link rel="icon" href="/icons/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="/icons/icon-192.png"/>
 <link rel="stylesheet" href="/css/styles.css"/>
+<script>
+  /* Apply the saved theme before first paint so there is no flash. */
+  try {
+    var th = JSON.parse(localStorage.getItem('acs.prefs') || '{}').theme || 'auto';
+    var dark = th === 'dark' || (th === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+</script>
 </head>
 <body>
 <div id="splash" class="splash">
-  <div class="splash-logo">📚</div>
+  <div class="splash-mark">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 6.5C10.5 5 8.2 4.3 4 4.5c0 9.5 3.2 13.6 8 15 4.8-1.4 8-5.5 8-15-4.2-.2-6.5.5-8 2Z"/>
+      <path d="M12 9.6v4.2M9.9 11.7h4.2"/>
+    </svg>
+  </div>
   <div class="splash-name">مکتب و کلینیک من</div>
   <div class="splash-sub">زما ښوونځی او کلینیک</div>
   <div class="splash-bar"><i></i></div>
@@ -25,8 +39,9 @@
 <div id="app" class="app hidden"></div>
 
 <div id="toasts" class="toasts"></div>
-<div id="offline-bar" class="offline-bar hidden"><span id="offline-text">آفلاین</span></div>
+<div id="offline-bar" class="offline-bar hidden"></div>
 
+<script src="/js/icons.js"></script>
 <script src="/js/i18n.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/ui.js"></script>

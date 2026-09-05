@@ -2,20 +2,20 @@
    School module — student, parent, teacher, principal & admin screens
    =========================================================================== */
 (function (global) {
-  const { h, esc, qs, qsa, toast, modal, closeModal, confirmDialog, fmt, chip, empty, bar, stat, skeleton, pickFile, localisedInput, readLocalised } = UI;
+  const { h, esc, qs, qsa, toast, modal, closeModal, confirmDialog, fmt, chip, chipIcon, empty, bar, stat, skeleton, pickFile, localisedInput, readLocalised } = UI;
   const VIEWS = (global.VIEWS = global.VIEWS || {});
   const schoolRoles = ['student', 'parent', 'teacher', 'admin', 'principal'];
   const IMPROVE_CATS = {
-    strength: ['💪', () => t('strengths'), 'ok'],
-    focus: ['🎯', () => t('focus_areas'), 'warn'],
-    behavior: ['🧭', () => t('behavior'), 'info'],
-    skill: ['🛠', () => t('skill'), 'info'],
-    attendance: ['📅', () => t('attendance'), 'danger']
+    strength: ['star', () => t('strengths'), 'ok'],
+    focus: ['target', () => t('focus_areas'), 'warn'],
+    behavior: ['compass', () => t('behavior'), 'info'],
+    skill: ['penTool', () => t('skill'), 'info'],
+    attendance: ['calendarX', () => t('attendance'), 'danger']
   };
 
   // ================================================================= home ====
   VIEWS.home = {
-    id: 'home', icon: '🏠', label: () => t('home'), roles: schoolRoles,
+    id: 'home', icon: 'home', label: () => t('home'), roles: schoolRoles,
     async render(ctx) {
       const s = APP.session;
       if (s.view.role === 'teacher' || s.view.role === 'admin' || s.view.role === 'principal') {
@@ -38,21 +38,21 @@
       const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       const current = slots.find((x) => x.start_time <= hhmm && x.end_time >= hhmm);
       const upcoming = slots.find((x) => x.start_time > hhmm);
-      const mood = { ok: '🙂', great: '😄', tired: '😴', sad: '😔', worried: '😟', sick: '🤒' };
+      const mood = { ok: 'sun', great: 'sparkles', tired: 'moon', sad: 'frown', worried: 'alert', sick: 'thermometer' };
 
       return `
-      <div class="card accent">
+      <div class="hero">
         <div class="spread">
-          <div>
-            <div class="tiny" style="opacity:.85">${esc(fmt.weekday(fmt.todayISO()))} · ${esc(fmt.date(fmt.todayISO()))}</div>
-            <h2 style="margin:2px 0">${esc(t('hello'))}، ${esc(APP.session.view.name_fa || APP.session.view.username)} 👋</h2>
+          <div style="min-width:0">
+            <div class="sub">${esc(fmt.weekday(fmt.todayISO()))} · ${esc(fmt.date(fmt.todayISO()))}</div>
+            <h2>${esc(t('hello'))}، ${esc(APP.session.view.name_fa || APP.session.view.username)}</h2>
           </div>
-          <div class="hero-badge">${esc(overview.classes[0] ? L(overview.classes[0].name_fa) || `${overview.classes[0].grade}-${overview.classes[0].section}` : '')}</div>
+          <span class="hero-badge">${I('school')} ${esc(overview.classes[0] ? L(overview.classes[0].name_fa) || `${overview.classes[0].grade}-${overview.classes[0].section}` : '')}</span>
         </div>
-        <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
-          ${chip(`${pending.length} ${t('homework')}`, pending.length ? 'warn' : 'ok')}
-          ${chip(`${overview.merit_total ?? 0} ⭐`, 'info')}
-          ${overview.attendance_pct !== null ? chip(`${overview.attendance_pct}% ${t('attendance')}`, overview.attendance_pct >= 85 ? 'ok' : 'warn') : ''}
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="n">${pending.length}</div><div class="l">${esc(t('todo'))}</div></div>
+          <div class="hero-stat"><div class="n">${overview.merit_total ?? 0}</div><div class="l">${esc(t('merit'))}</div></div>
+          <div class="hero-stat"><div class="n">${overview.attendance_pct !== null ? overview.attendance_pct + '%' : '—'}</div><div class="l">${esc(t('attendance_pct'))}</div></div>
         </div>
       </div>
 
@@ -63,14 +63,14 @@
             <strong>${esc(L((current || upcoming).subject_fa) || '')} ${(current || upcoming).teacher_fa ? `<span class="tiny muted">· ${esc((current || upcoming).teacher_fa)}</span>` : ''}</strong>
             <div class="tiny muted">${esc((current || upcoming).start_time)} – ${esc((current || upcoming).end_time)} · ${esc((current || upcoming).room || '')}</div>
           </div>
-          <span style="font-size:24px">${current ? '🔔' : '⏭'}</span>
+          <span class="tile sm ${current ? '' : 'muted'}">${I(current ? 'bell' : 'chevron')}</span>
         </div>
       </div>` : ''}
 
       ${next ? `<div class="card">
         <div class="section-title" style="margin-bottom:8px">${esc(t('due_soon'))}</div>
         <div class="list-item" style="padding:0">
-          <div class="avatar">📝</div>
+          <div class="avatar">${I('homework')}</div>
           <div class="body">
             <div class="title">${esc(L(next.title))}</div>
             <div class="sub">${esc(L(next.subject_fa) || '')} · ${esc(fmt.date(next.due_at))}</div>
@@ -81,7 +81,7 @@
           <a class="btn sm grow" href="#/homework/${esc(next.id)}">${esc(t('submit'))}</a>
           <a class="btn sm secondary grow" href="#/tutor?hw=${esc(next.id)}">${esc(t('ask_tutor'))}</a>
         </div>
-      </div>` : `<div class="card">${empty('🎉', t('empty_homework'))}</div>`}
+      </div>` : `<div class="card">${empty('party', t('empty_homework'))}</div>`}
 
       <div class="grid3">
         ${stat(pending.length, t('homework'))}
@@ -106,7 +106,7 @@
         <div class="spread">
           <strong class="small">${esc(t('how_feel'))}</strong>
           <div class="row" style="gap:4px" id="moodRow">
-            ${Object.entries(mood).map(([k, e2]) => `<button class="icon-btn" data-mood="${k}" style="background:#f4f6fb;color:#14213d;font-size:19px">${e2}</button>`).join('')}
+            ${Object.entries(mood).map(([k, e2]) => `<button class="tile muted" type="button" data-mood="${k}">${I(e2)}</button>`).join('')}
           </div>
         </div>
       </div>`;
@@ -117,43 +117,43 @@
       const { overview } = await API.get('/api/school/overview');
       const kids = overview.children || [];
       const selected = APP.state.childId || (kids[0] && kids[0].id);
-      if (!kids.length) return `<div class="card">${empty('👨‍👩‍👧', t('my_children'))}</div>`;
+      if (!kids.length) return `<div class="card">${empty('dot', t('my_children'))}</div>`;
       const kid = kids.find((k) => k.id === selected) || kids[0];
       return `
       <div class="child-switch">
         ${kids.map((k) => `<button class="child ${k.id === kid.id ? 'active' : ''}" data-child="${esc(k.id)}">
-          <span class="av">${esc(k.avatar || '🧒')}</span>${esc(k.name_fa || k.name_en)}</button>`).join('')}
+          <span class="av">${I(k.avatar || 'baby')}</span>${esc(k.name_fa || k.name_en)}</button>`).join('')}
       </div>
-      <div class="card accent">
+      <div class="hero">
         <div class="spread">
-          <div>
-            <div class="tiny" style="opacity:.85">${esc(fmt.date(fmt.todayISO()))} · ${esc(fmt.weekday(fmt.todayISO()))}</div>
-            <h2 style="margin:2px 0">${esc(kid.name_fa || kid.name_en)}</h2>
-            <div class="tiny">${esc(kid.class_label || '')}</div>
+          <div style="min-width:0">
+            <div class="sub">${esc(fmt.weekday(fmt.todayISO()))} · ${esc(fmt.date(fmt.todayISO()))}</div>
+            <h2>${esc(kid.name_fa || kid.name_en)}</h2>
+            <div class="sub">${esc(kid.class_label || '')}</div>
           </div>
-          <div class="hero-badge">${kid.pending} ${esc(t('homework'))}</div>
+          <span class="hero-badge">${I('homework')} ${kid.pending}</span>
         </div>
-        <div class="grid3" style="margin-top:10px">
-          ${stat(kid.pending, t('todo'))}
-          ${stat(kid.attendance_pct ?? '—', t('attendance_pct'))}
-          ${stat(kid.merit_total ?? 0, t('merit'))}
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="n">${kid.pending}</div><div class="l">${esc(t('todo'))}</div></div>
+          <div class="hero-stat"><div class="n">${kid.attendance_pct !== null && kid.attendance_pct !== undefined ? kid.attendance_pct + '%' : '—'}</div><div class="l">${esc(t('attendance_pct'))}</div></div>
+          <div class="hero-stat"><div class="n">${kid.merit_total ?? 0}</div><div class="l">${esc(t('merit'))}</div></div>
         </div>
       </div>
 
-      ${kid.overdue ? `<div class="notice">⚠️ ${esc(kid.overdue)} ${esc(t('overdue'))}</div>` : ''}
+      ${kid.overdue ? `<div class="notice">${I('alert')} ${esc(kid.overdue)} ${esc(t('overdue'))}</div>` : ''}
 
       <div class="grid2">
-        <a class="btn block" href="#/homework?child=${esc(kid.id)}">📝 ${esc(t('homework'))}</a>
-        <a class="btn secondary block" href="#/timetable?child=${esc(kid.id)}">🗓 ${esc(t('timetable'))}</a>
-        <a class="btn secondary block" href="#/progress?child=${esc(kid.id)}">📈 ${esc(t('progress'))}</a>
-        <button class="btn secondary block" id="openChild">👦 ${esc(t('view_as_child'))}</button>
+        <a class="btn block" href="#/homework?child=${esc(kid.id)}">${I('homework')} ${esc(t('homework'))}</a>
+        <a class="btn secondary block" href="#/timetable?child=${esc(kid.id)}">${I('calendarDays')} ${esc(t('timetable'))}</a>
+        <a class="btn secondary block" href="#/progress?child=${esc(kid.id)}">${I('trending')} ${esc(t('progress'))}</a>
+        <button class="btn secondary block" id="openChild">${I('baby')} ${esc(t('view_as_child'))}</button>
       </div>
 
       <div class="card">
         <div class="section-title" style="margin-bottom:6px">${esc(t('quick_actions') || t('actions'))}</div>
         <div class="grid2">
-          <button class="btn ghost block" id="reqMeeting">📅 ${esc(t('request_meeting'))}</button>
-          <a class="btn ghost block" href="#/messages">💬 ${esc(t('messages'))}</a>
+          <button class="btn ghost block" id="reqMeeting">${I('calendar')} ${esc(t('request_meeting'))}</button>
+          <a class="btn ghost block" href="#/messages">${I('messages')} ${esc(t('messages'))}</a>
         </div>
       </div>`;
     },
@@ -164,13 +164,18 @@
         const { stats } = await API.get('/api/school/stats');
         const c = stats.counts;
         return `
-        <div class="card accent">
-          <h2 style="margin:0">${esc(t('stats'))}</h2>
-          <div class="tiny muted">${esc(fmt.date(fmt.todayISO()))}</div>
-          <div class="grid3" style="margin-top:10px">
-            ${stat(c.students, t('total_students'))}
-            ${stat(c.teachers, t('teacher'))}
-            ${stat(c.classes, t('classes'))}
+        <div class="hero">
+          <div class="spread">
+            <div>
+              <div class="sub">${esc(fmt.weekday(fmt.todayISO()))} · ${esc(fmt.date(fmt.todayISO()))}</div>
+              <h2>${esc(t('stats'))}</h2>
+            </div>
+            <span class="hero-badge">${I('building')} ${esc(t('app_name'))}</span>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat"><div class="n">${c.students}</div><div class="l">${esc(t('total_students'))}</div></div>
+            <div class="hero-stat"><div class="n">${c.teachers}</div><div class="l">${esc(t('teacher'))}</div></div>
+            <div class="hero-stat"><div class="n">${c.classes}</div><div class="l">${esc(t('classes'))}</div></div>
           </div>
         </div>
         <div class="card">
@@ -181,35 +186,36 @@
           <div class="spread tiny muted" style="margin-top:4px"><span>${esc(t('attendance'))} ${esc(t('today'))}</span><span>${stats.attendance_today ?? '—'}%</span></div>
         </div>
         <div class="grid2">
-          <a class="btn block" href="#/admin">⚙️ ${esc(t('admin'))}</a>
-          <a class="btn secondary block" href="#/classes">🏫 ${esc(t('classes'))}</a>
-          <a class="btn secondary block" href="#/calendar">📅 ${esc(t('calendar'))}</a>
-          <button class="btn secondary block" id="newAnnouncement">📢 ${esc(t('announcements'))}</button>
+          <a class="btn block" href="#/admin">${I('settings')} ${esc(t('admin'))}</a>
+          <a class="btn secondary block" href="#/classes">${I('school')} ${esc(t('classes'))}</a>
+          <a class="btn secondary block" href="#/calendar">${I('calendar')} ${esc(t('calendar'))}</a>
+          <button class="btn secondary block" id="newAnnouncement">${I('megaphone')} ${esc(t('announcements'))}</button>
         </div>
         <div class="section-title">${esc(t('classes'))}</div>
         <div class="card"><div class="list">
           ${(stats.per_class || []).map((c2) => `<div class="list-item" data-class="${esc(c2.id)}">
-            <div class="avatar">🏫</div>
+            <div class="avatar">${I('school')}</div>
             <div class="body"><div class="title">${esc(`${c2.grade}-${c2.section}`)}</div>
               <div class="sub">${c2.students} ${esc(t('student'))} · ${c2.submissions} ${esc(t('submitted'))}</div></div>
-            <span class="muted">›</span></div>`).join('') || empty('🏫', t('no_results'))}
+            <span class="chev">${I('chevron')}</span></div>`).join('') || empty('school', t('no_results'))}
         </div></div>`;
       }
       const { overview } = await API.get('/api/school/overview');
       const hhmm = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
       return `
-      <div class="card accent">
+      <div class="hero">
         <div class="spread">
-          <div><h2 style="margin:0">${esc(t('hello'))}، ${esc(APP.session.view.name_fa || '')}</h2>
-            <div class="tiny">${esc(fmt.weekday(fmt.todayISO()))} · ${esc(fmt.date(fmt.todayISO()))}</div></div>
-          <div class="hero-badge">${overview.students_count || 0} ${esc(t('student'))}</div>
+          <div style="min-width:0">
+            <div class="sub">${esc(fmt.weekday(fmt.todayISO()))} · ${esc(fmt.date(fmt.todayISO()))}</div>
+            <h2>${esc(t('hello'))}، ${esc(APP.session.view.name_fa || '')}</h2>
+          </div>
+          <span class="hero-badge">${I('users')} ${overview.students_count || 0}</span>
         </div>
-      </div>
-
-      <div class="grid3">
-        ${stat((overview.to_grade || []).length, t('to_grade'))}
-        ${stat((overview.homework || []).length, t('homework'))}
-        ${stat((overview.absent_today || []).length, t('absent'))}
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="n">${(overview.to_grade || []).length}</div><div class="l">${esc(t('to_grade'))}</div></div>
+          <div class="hero-stat"><div class="n">${(overview.homework || []).length}</div><div class="l">${esc(t('homework'))}</div></div>
+          <div class="hero-stat"><div class="n">${(overview.absent_today || []).length}</div><div class="l">${esc(t('absent'))}</div></div>
+        </div>
       </div>
 
       ${(overview.today_slots || []).length ? `<div class="section-title">${esc(t('today_classes'))}</div>
@@ -229,13 +235,13 @@
             <a class="btn sm" href="#/homework/${esc(g.homework_id)}">${esc(t('grade_work'))}</a>
           </div></div>`).join('')}` : ''}
 
-      ${(overview.at_risk || []).length ? `<div class="notice">⚠️ ${(overview.at_risk || []).map((r) => esc(r.name)).join('، ')} — ${esc(t('at_risk'))}</div>` : ''}
+      ${(overview.at_risk || []).length ? `<div class="notice">${I('alert')} ${(overview.at_risk || []).map((r) => esc(r.name)).join('، ')} — ${esc(t('at_risk'))}</div>` : ''}
 
       <div class="grid2">
-        <button class="btn block" id="newHW">📝 ${esc(t('new_homework'))}</button>
-        <a class="btn secondary block" href="#/attendance">✅ ${esc(t('take_attendance'))}</a>
-        <a class="btn secondary block" href="#/classes">👥 ${esc(t('classes'))}</a>
-        <button class="btn secondary block" id="newAnnouncement">📢 ${esc(t('announcements'))}</button>
+        <button class="btn block" id="newHW">${I('homework')} ${esc(t('new_homework'))}</button>
+        <a class="btn secondary block" href="#/attendance">${I('checkCircle')} ${esc(t('take_attendance'))}</a>
+        <a class="btn secondary block" href="#/classes">${I('users')} ${esc(t('classes'))}</a>
+        <button class="btn secondary block" id="newAnnouncement">${I('megaphone')} ${esc(t('announcements'))}</button>
       </div>`;
     },
 
@@ -292,7 +298,7 @@
 
   // ============================================================= homework ====
   VIEWS.homework = {
-    id: 'homework', icon: '📝', label: () => t('homework'), roles: schoolRoles,
+    id: 'homework', icon: 'homework', label: () => t('homework'), roles: schoolRoles,
     async render(ctx) {
       if (ctx.params.id) return VIEWS.homework.detail(ctx.params.id);
       const { homework } = await API.get('/api/school/homework');
@@ -319,24 +325,29 @@
         const isTeacherView = ['teacher', 'admin', 'principal'].includes(role);
         const count = isTeacherView && hw.submissions !== undefined
           ? `<div class="tiny muted">${hw.submissions}/${hw.enrolled ?? '?'} ${esc(t('submitted'))} · ${hw.graded ?? 0} ${esc(t('graded'))}</div>` : '';
+        const st = hw.sub_status === 'graded' ? ['checkCircle', 'ok']
+          : hw.sub_status === 'returned' ? ['repeat', 'danger']
+          : hw.sub_status === 'late' ? ['alert', 'warn']
+          : hw.sub_status ? ['upload', 'info'] : ['homework', ''];
         return `<div class="card tight" data-hw="${esc(hw.id)}">
-          <div class="spread">
+          <div class="row" style="align-items:flex-start">
+            <span class="tile ${st[1]}">${I(st[0])}</span>
             <div class="grow" style="min-width:0">
               <strong style="font-size:.95rem">${esc(L(hw.title))}</strong>
               <div class="tiny muted">${esc(L(hw.subject_fa) || '')}${hw.teacher_fa ? ` · ${esc(hw.teacher_fa)}` : ''}${hw.student_name ? ` · ${esc(hw.student_name)}` : ''}</div>
               ${count}
             </div>
-            <div class="stack" style="align-items:flex-end">
-              ${chip(fmt.date(hw.due_at), 'outline')}
+            <div class="stack tight" style="align-items:flex-end">
+              ${chipIcon('calendar', fmt.date(hw.due_at), 'outline')}
               ${chip(due.text, due.kind)}
             </div>
           </div>
-          <div class="row" style="margin-top:6px;gap:6px">
+          <div class="row" style="margin-top:8px;gap:6px">
             ${hw.sub_status ? chip(hw.sub_status === 'graded' ? `${t('graded')} ${hw.score ?? ''}` : t(hw.sub_status) || hw.sub_status, hw.sub_status === 'graded' ? 'ok' : hw.sub_status === 'returned' ? 'danger' : 'info') : ''}
             ${hw.is_late ? chip(t('late'), 'danger') : ''}
           </div>
         </div>`;
-      }).join('') : `<div class="card">${empty('📚', t('empty_homework'))}</div>`}`;
+      }).join('') : `<div class="card">${empty('book', t('empty_homework'))}</div>`}`;
     },
     async mount(root, ctx) {
       qsa('[data-tab]', root).forEach((b) => b.onclick = () => {
@@ -357,7 +368,7 @@
       const hw = data.homework;
       const role = APP.session.view.role;
       const due = fmt.due(hw.due_at);
-      const files = (data.attachments || []).map((a) => `<a class="chip outline" href="/api/files/${esc(a.id)}" target="_blank">📎 ${esc(a.name)}</a>`).join(' ');
+      const files = (data.attachments || []).map((a) => `<a class="chip outline" href="/api/files/${esc(a.id)}" target="_blank">${I('paperclip')} ${esc(a.name)}</a>`).join(' ');
       const head = `
         <div class="card accent">
           <div class="spread">
@@ -374,10 +385,10 @@
           <div class="small" style="margin-top:10px">${esc(L(hw.instructions))}</div>
           ${files ? `<div class="row wrap" style="margin-top:8px">${files}</div>` : ''}
           <div class="row" style="margin-top:10px;gap:6px">
-            <a class="btn sm secondary grow" href="#/tutor?hw=${esc(hw.id)}">🤖 ${esc(t('ask_tutor'))}</a>
-            <button class="btn sm ghost" id="speakTask">🔊 ${esc(t('read_aloud'))}</button>
+            <a class="btn sm secondary grow" href="#/tutor?hw=${esc(hw.id)}">${I('bot')} ${esc(t('ask_tutor'))}</a>
+            <button class="btn sm ghost" id="speakTask">${I('volume')} ${esc(t('read_aloud'))}</button>
           </div>
-          <div class="tiny muted" style="margin-top:6px">🤖 ${esc(t('tutor_help'))}</div>
+          <div class="tiny muted" style="margin-top:6px">${I('bot')} ${esc(t('tutor_help'))}</div>
         </div>`;
 
       if (role === 'teacher' || role === 'admin' || role === 'principal') {
@@ -394,14 +405,14 @@
           <div class="card tight" data-student="${esc(s.id)}">
             <div class="spread">
               <div class="row">
-                <div class="avatar" style="width:34px;height:34px;font-size:16px">${esc(s.avatar || '🧑‍🎓')}</div>
+                <div class="avatar sm">${I(s.avatar || 'graduation')}</div>
                 <div><strong class="small">${esc(s.name_fa || s.name_en)}</strong>
                   <div class="tiny muted">${s.status ? esc(t(s.status) || s.status) : esc(t('not_submitted'))} ${s.score !== null && s.score !== undefined ? `· ${s.score}/${hw.max_points}` : ''}</div></div>
               </div>
               ${s.submission_id ? `<button class="btn sm" data-grade="${esc(s.id)}">${esc(t('grade_work'))}</button>` : chip(t('missing'), 'danger')}
             </div>
             ${s.text ? `<div class="small" style="margin-top:6px;padding:8px;background:#f7f9fc;border-radius:10px">${esc(s.text)}</div>` : ''}
-            ${(s.attachments || []).length ? `<div class="row wrap" style="margin-top:6px">${s.attachments.map((a) => `<a class="chip outline" href="/api/files/${esc(a.id)}" target="_blank">📎</a>`).join('')}</div>` : ''}
+            ${(s.attachments || []).length ? `<div class="row wrap" style="margin-top:6px">${s.attachments.map((a) => `<a class="chip outline" href="/api/files/${esc(a.id)}" target="_blank">${I('paperclip')}</a>`).join('')}</div>` : ''}
           </div>`).join('')}`;
       }
 
@@ -420,19 +431,19 @@
       const submitCard = `
         <div class="card">
           <h3>${sub ? esc(t('submit_work')) : esc(t('submit'))}</h3>
-          ${sub && sub.score !== null ? `<div class="notice ok">✅ ${esc(t('graded'))}: <strong>${sub.score}/${hw.max_points}</strong></div>` : ''}
-          ${sub && sub.feedback ? `<div class="notice" style="margin-top:8px">💬 ${esc(L(sub.feedback))}</div>` : ''}
-          ${sub && sub.status === 'returned' ? `<div class="notice" style="margin-top:8px">↩️ ${esc(t('returned'))}</div>` : ''}
+          ${sub && sub.score !== null ? `<div class="notice ok">${I('checkCircle')} ${esc(t('graded'))}: <strong>${sub.score}/${hw.max_points}</strong></div>` : ''}
+          ${sub && sub.feedback ? `<div class="notice" style="margin-top:8px">${I('messages')} ${esc(L(sub.feedback))}</div>` : ''}
+          ${sub && sub.status === 'returned' ? `<div class="notice" style="margin-top:8px">${I('repeat')} ${esc(t('returned'))}</div>` : ''}
           ${(!isParent) ? `
           <div class="field"><label>${hw.allow_text ? esc(t('your_answer')) : esc(t('notes'))}</label>
             <textarea id="subText" placeholder="${esc(t('write_here'))}">${esc(sub?.text || '')}</textarea></div>
           <div class="row wrap" style="gap:8px">
-            ${hw.allow_file ? `<button class="btn secondary sm" id="btnPhoto">📷 ${esc(t('attach_photo'))}</button>` : ''}
-            ${hw.allow_file ? `<button class="btn secondary sm" id="btnFile">📎 ${esc(t('attach_file'))}</button>` : ''}
-            ${hw.allow_audio ? `<button class="btn secondary sm" id="btnAudio">🎤 ${esc(t('record_audio'))}</button>` : ''}
+            ${hw.allow_file ? `<button class="btn secondary sm" id="btnPhoto">${I('camera')} ${esc(t('attach_photo'))}</button>` : ''}
+            ${hw.allow_file ? `<button class="btn secondary sm" id="btnFile">${I('paperclip')} ${esc(t('attach_file'))}</button>` : ''}
+            ${hw.allow_audio ? `<button class="btn secondary sm" id="btnAudio">${I('mic')} ${esc(t('record_audio'))}</button>` : ''}
           </div>
           <div class="row wrap" id="attachList" style="margin-top:8px"></div>
-          <button class="btn block" id="btnSubmit" style="margin-top:10px">${sub ? '🔄 ' + esc(t('submit')) : esc(t('submit'))}</button>
+          <button class="btn block" id="btnSubmit" style="margin-top:10px">${I('refresh')} ${esc(t('submit'))}</button>
           ${sub ? `<div class="tiny muted center" style="margin-top:6px">${esc(t('submitted'))}: ${esc(fmt.dateTime(sub.submitted_at))}</div>` : ''}
           ` : `<div class="notice info">${esc(t('tutor_help'))} — ${esc(t('view_as_child'))}</div>`}
         </div>`;
@@ -449,7 +460,7 @@
       const text = qs('#subText', root);
       const attachments = [];
       const renderAttach = () => {
-        qs('#attachList', root).innerHTML = attachments.map((a, i) => `<span class="chip ok">📎 ${esc(a.name)} <b data-rm="${i}" style="cursor:pointer">✕</b></span>`).join('');
+        qs('#attachList', root).innerHTML = attachments.map((a, i) => `<span class="chip ok">${I('paperclip')} ${esc(a.name)} <b data-rm="${i}" style="cursor:pointer">${I('close')}</b></span>`).join('');
         qsa('[data-rm]', root).forEach((b) => b.onclick = () => { attachments.splice(+b.dataset.rm, 1); renderAttach(); });
       };
       const attach = async (file) => {
@@ -469,12 +480,12 @@
           try {
             audio.disabled = true;
             const pending = UI.recordAudio();
-            audio.textContent = '⏹ ' + t('stop');
+            audio.innerHTML = I('stop') + ' ' + esc(t('stop'));
             audio.disabled = false;
             audio.onclick = async () => {
               UI.stopRecording();
               const file = await pending;
-              audio.textContent = '🎤 ' + t('record_audio');
+              audio.innerHTML = I('mic') + ' ' + esc(t('record_audio'));
               attach(file);
             };
             toast(t('listening'), 'warn', 2000);
@@ -574,7 +585,7 @@
 
   // ============================================================ timetable ====
   VIEWS.timetable = {
-    id: 'timetable', icon: '🗓', label: () => t('timetable'), roles: schoolRoles,
+    id: 'timetable', icon: 'calendarDays', label: () => t('timetable'), roles: schoolRoles,
     async render(ctx) {
       const childId = ctx.query.child || APP.state.childId;
       const qs2 = childId ? `?student_id=${encodeURIComponent(childId)}` : '';
@@ -616,7 +627,7 @@
             <div class="grow"><strong class="small">${esc(subjectOf(s))}</strong>
               <div class="tiny muted">${esc(s.start_time)}–${esc(s.end_time)} · ${esc(s.teacher_fa || '')} ${s.room ? '· ' + esc(s.room) : ''}</div></div>
             <span class="chip outline">${esc(s.room || '')}</span>
-          </div>`).join('')}</div>` : `<div class="card">${empty('🗓', t('no_class_today'))}</div>`}`;
+          </div>`).join('')}</div>` : `<div class="card">${empty('calendarDays', t('no_class_today'))}</div>`}`;
 
       return grid + list;
     }
@@ -624,11 +635,11 @@
 
   // ============================================================== progress ==
   VIEWS.progress = {
-    id: 'progress', icon: '📈', label: () => t('progress'), roles: ['student', 'parent', 'teacher', 'admin', 'principal'],
+    id: 'progress', icon: 'trending', label: () => t('progress'), roles: ['student', 'parent', 'teacher', 'admin', 'principal'],
     async render(ctx) {
       const studentId = ctx.query.child || APP.state.childId || (APP.session.view.role === 'student' ? APP.session.view.id : null)
         || (APP.session.children && APP.session.children[0]?.id);
-      if (!studentId) return `<div class="card">${empty('📈', t('no_results'))}</div>`;
+      if (!studentId) return `<div class="card">${empty('trending', t('no_results'))}</div>`;
       const [{ improvements }, grades, att, merit] = await Promise.all([
         API.get('/api/school/improvement?student_id=' + studentId),
         API.get('/api/school/grades/' + studentId),
@@ -647,23 +658,28 @@
 
       <div class="section-title">${esc(t('improvement_points'))}</div>
       ${improvements.length ? improvements.map((i) => {
-        const c = IMPROVE_CATS[i.category] ? [IMPROVE_CATS[i.category][0], IMPROVE_CATS[i.category][1](), IMPROVE_CATS[i.category][2]] : ['🎯', t('focus_areas'), 'warn'];
+        const c = IMPROVE_CATS[i.category] ? [IMPROVE_CATS[i.category][0], IMPROVE_CATS[i.category][1](), IMPROVE_CATS[i.category][2]] : ['target', () => t('focus_areas'), 'warn'];
         const subjectLabel = L(i.subject_fa) || c[1] || i.category;
         return `<div class="card tight">
           <div class="spread">
-            <div><span>${c[0]}</span> <strong class="small">${esc(subjectLabel)}</strong>
-              <span class="chip ${c[2]}">${esc(c[1])}</span></div>
+            <div class="row" style="min-width:0">
+              <span class="tile sm ${c[2]}">${I(c[0])}</span>
+              <div class="grow" style="min-width:0">
+                <strong class="small">${esc(subjectLabel)}</strong>
+                <div class="tiny muted">${esc(c[1])}</div>
+              </div>
+            </div>
             ${chip(t(i.status) || i.status, i.status === 'achieved' ? 'ok' : i.status === 'improving' ? 'info' : 'warn')}
           </div>
           <div class="small" style="margin-top:4px">${esc(L(i.text))}</div>
-          ${i.goal ? `<div class="tiny muted">🎯 ${esc(L(i.goal))}</div>` : ''}
+          ${i.goal ? `<div class="tiny muted">${I('target')} ${esc(L(i.goal))}</div>` : ''}
           <div style="margin-top:8px">${bar(i.progress || 0, i.progress >= 70 ? 'ok' : '')}</div>
           <div class="row" style="margin-top:8px;gap:6px">
             ${[0, 25, 50, 75, 100].map((p) => `<button class="btn sm ${i.progress === p ? '' : 'ghost'}" data-prog="${i.id}" data-val="${p}">${p}%</button>`).join('')}
-            ${i.status !== 'achieved' ? `<button class="btn sm ok" data-achieve="${i.id}">✓</button>` : ''}
+            ${i.status !== 'achieved' ? `<button class="btn sm ok" data-achieve="${i.id}">${I('check')}</button>` : ''}
           </div>
         </div>`;
-      }).join('') : `<div class="card">${empty('📈', t('no_results'))}</div>`}
+      }).join('') : `<div class="card">${empty('trending', t('no_results'))}</div>`}
 
       <div class="section-title">${esc(t('results'))}</div>
       <div class="card">
@@ -671,13 +687,13 @@
           <div style="margin-bottom:10px">
             <div class="spread small"><strong>${esc(s.subject)}</strong><span>${s.average}% · ${s.count} ${esc(t('exams'))}</span></div>
             ${bar(s.average, s.average >= 50 ? 'ok' : s.average >= 40 ? 'warn' : 'danger')}
-          </div>`).join('') : empty('📝', t('no_results'))}
+          </div>`).join('') : empty('homework', t('no_results'))}
       </div>
 
       <div class="section-title">${esc(t('attendance'))}</div>
       <div class="card tight">
         <div class="row wrap" style="gap:4px">
-          ${(att.records || []).slice(0, 30).map((r) => `<span class="chip ${r.status === 'present' ? 'ok' : r.status === 'late' ? 'warn' : r.status === 'excused' ? 'grey' : 'danger'}" title="${esc(fmt.date(r.date))}">${esc(fmt.jalali(r.date).split(' ')[0])}</span>`).join('') || empty('📅', t('no_results'))}
+          ${(att.records || []).slice(0, 30).map((r) => `<span class="chip ${r.status === 'present' ? 'ok' : r.status === 'late' ? 'warn' : r.status === 'excused' ? 'grey' : 'danger'}" title="${esc(fmt.date(r.date))}">${esc(fmt.jalali(r.date).split(' ')[0])}</span>`).join('') || empty('calendar', t('no_results'))}
         </div>
         <div class="tiny muted" style="margin-top:6px">${esc(t('absences'))}: ${(att.records || []).filter((r) => r.status === 'absent').length}</div>
       </div>`;
@@ -722,7 +738,7 @@
 
   // ============================================================== library ====
   VIEWS.library = {
-    id: 'library', icon: '📚', label: () => t('library'), roles: schoolRoles,
+    id: 'library', icon: 'book', label: () => t('library'), roles: schoolRoles,
     async render() {
       const { books } = await API.get('/api/school/library');
       let total = null;
@@ -730,7 +746,7 @@
       return `
       <div class="card tight">
         <input type="text" id="bookSearch" placeholder="${esc(t('search_placeholder'))}"/>
-        <div class="tiny muted" style="margin-top:6px">${total !== null ? `⏱ ${total} ${esc(t('reading_minutes'))}` : ''}</div>
+        <div class="tiny muted" style="margin-top:6px">${total !== null ? `${I('timer')} ${total} ${esc(t('reading_minutes'))}` : ''}</div>
       </div>
       <div id="bookList" class="stack">
         ${books.map((b) => `<div class="card tight">
@@ -739,12 +755,12 @@
               <strong class="small">${esc(b.title)}</strong>
               <div class="tiny muted">${esc(b.subject || '')} ${b.grade ? '· ' + esc(t('grade')) + ' ' + b.grade : ''}</div>
             </div>
-            ${b.url ? `<a class="btn sm secondary" href="${esc(b.url)}" target="_blank" rel="noopener">📖 ${esc(t('open_book'))}</a>` : ''}
+            ${b.url ? `<a class="btn sm secondary" href="${esc(b.url)}" target="_blank" rel="noopener">${I('bookOpen')} ${esc(t('open_book'))}</a>` : ''}
           </div>
           <div class="row" style="margin-top:8px;gap:6px">
-            <button class="btn sm ghost" data-log="${esc(b.id)}">⏱ ${esc(t('log_reading'))}</button>
+            <button class="btn sm ghost" data-log="${esc(b.id)}">${I('timer')} ${esc(t('log_reading'))}</button>
           </div>
-        </div>`).join('') || empty('📚', t('no_results'))}
+        </div>`).join('') || empty('book', t('no_results'))}
       </div>`;
     },
     mount(root) {
@@ -757,7 +773,7 @@
           qs('#bookList', root).innerHTML = books.map((b) => `<div class="card tight">
             <div class="spread"><div class="grow" style="min-width:0"><strong class="small">${esc(b.title)}</strong>
               <div class="tiny muted">${esc(b.subject || '')}</div></div>
-              ${b.url ? `<a class="btn sm secondary" href="${esc(b.url)}" target="_blank">📖</a>` : ''}</div></div>`).join('') || empty('📚', t('no_results'));
+              ${b.url ? `<a class="btn sm secondary" href="${esc(b.url)}" target="_blank">${I('bookOpen')}</a>` : ''}</div></div>`).join('') || empty('book', t('no_results'));
         }, 300);
       };
       qsa('[data-log]', root).forEach((b) => b.onclick = async () => {
@@ -771,7 +787,7 @@
 
   // ============================================================== quizzes ====
   VIEWS.quizzes = {
-    id: 'quizzes', icon: '🎯', label: () => t('quizzes'), roles: ['student', 'parent', 'teacher', 'admin', 'principal'],
+    id: 'quizzes', icon: 'target', label: () => t('quizzes'), roles: ['student', 'parent', 'teacher', 'admin', 'principal'],
     async render(ctx) {
       if (ctx.params.id) {
         const data = await API.get('/api/school/quizzes/' + ctx.params.id);
@@ -794,8 +810,8 @@
       return `<div class="stack">${quizzes.map((q) => `
         <div class="card tight" data-quiz="${esc(q.id)}">
           <div class="spread"><div><strong class="small">${esc(q.title)}</strong>
-            <div class="tiny muted">${q.grade ? esc(t('grade')) + ' ' + q.grade : ''}</div></div><span class="muted">›</span></div>
-        </div>`).join('') || empty('🎯', t('no_results'))}</div>`;
+            <div class="tiny muted">${q.grade ? esc(t('grade')) + ' ' + q.grade : ''}</div></div><span class="chev">${I('chevron')}</span></div>
+        </div>`).join('') || empty('target', t('no_results'))}</div>`;
     },
     mount(root, ctx) {
       if (!ctx.params.id) {
@@ -816,7 +832,7 @@
           <h3>${esc(t('your_score'))}: ${res.score}/${res.total}</h3>
           ${bar((res.score / res.total) * 100, res.score / res.total >= 0.6 ? 'ok' : 'warn')}
           ${(res.review || []).map((r) => `<div class="card tight" style="margin-top:8px">
-            <div class="spread"><strong class="small">${r.correct ? '✅' : '❌'} ${esc(t('explanation'))}</strong></div>
+            <div class="spread"><strong class="small">${I(r.correct ? 'checkCircle' : 'xCircle')} ${esc(t('explanation'))}</strong></div>
             <div class="small">${esc(r.explanation || (r.correct ? t('correct') : t('wrong')))}</div>
           </div>`).join('')}
         </div>`;
@@ -827,11 +843,11 @@
 
   // =========================================================== attendance ====
   VIEWS.attendance = {
-    id: 'attendance', icon: '✅', label: () => t('take_attendance'), roles: ['teacher', 'admin', 'principal'],
+    id: 'attendance', icon: 'checkCircle', label: () => t('take_attendance'), roles: ['teacher', 'admin', 'principal'],
     async render(ctx) {
       const { classes } = await API.get('/api/school/classes');
       const classId = ctx.query.class || (classes[0] && classes[0].id);
-      if (!classId) return `<div class="card">${empty('🏫', t('no_results'))}</div>`;
+      if (!classId) return `<div class="card">${empty('school', t('no_results'))}</div>`;
       const date = ctx.query.date || fmt.todayISO();
       const { class: cls, students } = await API.get(`/api/school/attendance?class_id=${encodeURIComponent(classId)}&date=${date}`);
       return `
@@ -841,21 +857,21 @@
           <input type="date" id="attDate" value="${esc(date)}" style="flex:1"/>
         </div>
         <div class="row" style="margin-top:8px">
-          <button class="btn sm secondary grow" id="allPresent">✓ ${esc(t('mark_all_present'))}</button>
+          <button class="btn sm secondary grow" id="allPresent">${I('check')} ${esc(t('mark_all_present'))}</button>
           <button class="btn sm grow" id="saveAtt">${esc(t('save'))}</button>
         </div>
       </div>
       <div class="card">
         <div class="list" id="attList">
           ${students.map((s) => `<div class="list-item" data-stu="${esc(s.id)}">
-            <div class="avatar">${esc(s.avatar || '🧑‍🎓')}</div>
+            <div class="avatar">${I(s.avatar || 'graduation')}</div>
             <div class="body"><div class="title">${esc(s.name_fa || s.name_en)}</div>
               <div class="tiny muted">${esc(t('absences'))}: ${s.absences || 0}</div></div>
           </div>
           <div class="segmented" style="margin:-4px 0 8px" data-status-for="${esc(s.id)}">
             ${[['present', t('present')], ['absent', t('absent')], ['late', t('late')], ['excused', t('excused')]]
               .map(([v, l]) => `<button data-st="${v}" class="${(s.status || 'present') === v ? 'active' : ''}">${esc(l)}</button>`).join('')}
-          </div>`).join('') || empty('🧑‍🎓', t('no_results'))}
+          </div>`).join('') || empty('graduation', t('no_results'))}
         </div>
       </div>`;
     },
@@ -892,7 +908,7 @@
 
   // =============================================================== classes ==
   VIEWS.classes = {
-    id: 'classes', icon: '🏫', label: () => t('classes'), roles: ['teacher', 'admin', 'principal'],
+    id: 'classes', icon: 'school', label: () => t('classes'), roles: ['teacher', 'admin', 'principal'],
     async render(ctx) {
       if (ctx.params.id) {
         const { class: cls, students } = await API.get('/api/school/classes/' + ctx.params.id);
@@ -901,18 +917,18 @@
           <div class="tiny">${esc(cls.room || '')} · ${students.length} ${esc(t('student'))}</div></div>
         ${students.map((s) => `<div class="card tight" data-stu="${esc(s.id)}">
           <div class="spread">
-            <div class="row"><div class="avatar" style="width:34px;height:34px;font-size:16px">${esc(s.avatar || '🧑‍🎓')}</div>
+            <div class="row"><div class="avatar sm">${I(s.avatar || 'graduation')}</div>
               <div><strong class="small">${esc(s.name_fa || s.name_en)}</strong>
                 <div class="tiny muted">${esc(t('absences'))}: ${s.absences || 0} · ${esc(t('submitted'))}: ${s.submissions || 0}</div></div></div>
             <button class="btn sm secondary" data-improve="${esc(s.id)}">＋ ${esc(t('add_improvement'))}</button>
           </div>
-        </div>`).join('') || empty('🧑‍🎓', t('no_results'))}`;
+        </div>`).join('') || empty('graduation', t('no_results'))}`;
       }
       const { classes } = await API.get('/api/school/classes');
       return `<div class="stack">${classes.map((c) => `<div class="card tight" data-cls="${esc(c.id)}">
         <div class="spread"><div><strong>${esc(c.grade)}-${esc(c.section)}</strong>
-          <div class="tiny muted">${esc(c.room || '')} · ${c.students} ${esc(t('student'))}</div></div><span class="muted">›</span></div>
-      </div>`).join('') || empty('🏫', t('no_results'))}</div>`;
+          <div class="tiny muted">${esc(c.room || '')} · ${c.students} ${esc(t('student'))}</div></div><span class="chev">${I('chevron')}</span></div>
+      </div>`).join('') || empty('school', t('no_results'))}</div>`;
     },
     mount(root, ctx) {
       qsa('[data-cls]', root).forEach((el) => el.onclick = () => { location.hash = '#/classes/' + el.dataset.cls; });
@@ -954,7 +970,7 @@
 
   // ================================================================= admin ==
   VIEWS.admin = {
-    id: 'admin', icon: '⚙️', label: () => t('admin'), roles: ['admin', 'principal'],
+    id: 'admin', icon: 'settings', label: () => t('admin'), roles: ['admin', 'principal'],
     async render(ctx) {
       const tab = ctx.query.tab || 'users';
       const tabs = [['users', t('users')], ['classes', t('classes')], ['timetable', t('timetable_builder')], ['reports', t('report_problem')], ['audit', t('audit')]];
@@ -963,14 +979,14 @@
         const { users } = await API.get('/api/users');
         inner = `
           <button class="btn block" id="addUser">＋ ${esc(t('add_user'))}</button>
-          <button class="btn secondary block" id="importCsv">📥 ${esc(t('import_csv'))}</button>
-          <button class="btn ghost block" id="exportCsv">📤 ${esc(t('export'))} CSV</button>
+          <button class="btn secondary block" id="importCsv">${I('download')} ${esc(t('import_csv'))}</button>
+          <button class="btn ghost block" id="exportCsv">${I('upload')} ${esc(t('export'))} CSV</button>
           <div class="card"><div class="list">
             ${users.map((u) => `<div class="list-item">
-              <div class="avatar">${esc(u.avatar || '🙂')}</div>
+              <div class="avatar">${I(u.avatar || 'user')}</div>
               <div class="body"><div class="title">${esc(u.name_fa || u.username)}</div>
                 <div class="sub">${esc(u.role)} · ${esc(u.username)}</div></div>
-              <span class="chip ${u.is_active ? 'ok' : 'danger'}">${u.is_active ? '✓' : '✕'}</span>
+              <span class="chip ${u.is_active ? 'ok' : 'danger'}">${I(u.is_active ? 'check' : 'close')}</span>
             </div>`).join('')}
           </div></div>`;
       } else if (tab === 'classes') {
@@ -984,7 +1000,7 @@
             <input type="text" id="classSection" placeholder="${esc(t('section'))}" style="flex:1" value="الف"/>
             <button class="btn sm" id="addClass">＋ ${esc(t('class'))}</button></div></div>
           <div class="card"><div class="list">
-            ${classes.map((c) => `<div class="list-item"><div class="avatar">🏫</div>
+            ${classes.map((c) => `<div class="list-item"><div class="avatar">${I('school')}</div>
               <div class="body"><div class="title">${esc(c.grade)}-${esc(c.section)}</div>
                 <div class="sub">${esc(c.room || '')} · ${c.students || 0} ${esc(t('student'))}</div></div>
               <a class="btn sm ghost" href="#/classes/${esc(c.id)}">${esc(t('view_all'))}</a></div>`).join('')}
@@ -1025,12 +1041,12 @@
             ${chip(r.status, r.status === 'open' ? 'danger' : 'ok')}</div>
           <div class="small">${esc(r.text)}</div>
           <div class="tiny muted">${esc(fmt.ago(r.created_at))}</div>
-          ${r.status === 'open' ? `<button class="btn sm block" data-close-report="${esc(r.id)}" style="margin-top:8px">✓ ${esc(t('done'))}</button>` : ''}
-        </div>`).join('') : `<div class="card">${empty('✅', t('no_results'))}</div>`;
+          ${r.status === 'open' ? `<button class="btn sm block" data-close-report="${esc(r.id)}" style="margin-top:8px">${I('check')} ${esc(t('done'))}</button>` : ''}
+        </div>`).join('') : `<div class="card">${empty('checkCircle', t('no_results'))}</div>`;
       } else {
         const { logs } = await API.get('/api/audit');
         inner = `<div class="card"><div class="list">
-          ${logs.slice(0, 40).map((l) => `<div class="list-item"><div class="avatar">🧾</div>
+          ${logs.slice(0, 40).map((l) => `<div class="list-item"><div class="avatar">${I('receipt')}</div>
             <div class="body"><div class="title small">${esc(l.action)}</div>
               <div class="sub">${esc(l.user_name || '')} · ${esc(fmt.ago(l.created_at))}</div></div></div>`).join('')}</div></div>`;
       }
@@ -1078,7 +1094,7 @@
                 const header = lines.shift().map((h2) => h2.trim());
                 const rows = lines.map((cols) => Object.fromEntries(cols.map((c, i) => [header[i], c.trim()])));
                 const res = await API.post('/api/users/import', { rows });
-                close(); toast(`${res.created} ✓ / ${res.skipped} —`, 'ok'); APP.render();
+                close(); toast(`${res.created} / ${res.skipped}`, 'ok'); APP.render();
               }
             }]
           });

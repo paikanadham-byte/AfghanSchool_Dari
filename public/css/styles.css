@@ -436,6 +436,14 @@ input[type=checkbox], input[type=radio] { width: 18px; height: 18px; accent-colo
 }
 .segmented button .ic { width: 16px; height: 16px; }
 .segmented button.active { background: var(--surface); color: var(--brand); box-shadow: var(--sh-1); }
+/* compact icon-only status picker used on the attendance screen */
+.segmented.status { flex: none; padding: 3px; gap: 2px; }
+.segmented.status button { flex: 0 0 38px; padding: 6px 0; min-height: 34px; }
+.segmented.status button.active { background: var(--surface-3); color: var(--ink-2); }
+.segmented.status button.active[data-st="present"] { background: var(--ok-600); color: #fff; }
+.segmented.status button.active[data-st="absent"] { background: var(--danger-600); color: #fff; }
+.segmented.status button.active[data-st="late"] { background: var(--warn-600); color: #fff; }
+.segmented.status button.active[data-st="excused"] { background: var(--info-600); color: #fff; }
 
 /* -------------------------------------------------------------------- nav */
 .bottomnav {
@@ -555,6 +563,8 @@ input[type=checkbox], input[type=radio] { width: 18px; height: 18px; accent-colo
   box-shadow: var(--sh-1);
 }
 .tt-cell.empty { background: var(--surface-2); box-shadow: none; }
+.tt-cell .ic { width: 13px; height: 13px; margin: 0 auto 1px; display: block; opacity: .9; }
+.tt-cell span { display: block; line-height: 1.15; }
 .tt-day-list { display: flex; flex-direction: column; gap: 8px; }
 .tt-slot {
   display: flex; gap: 11px; align-items: center; padding: 10px; border-radius: var(--r-md);

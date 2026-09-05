@@ -13,6 +13,20 @@
     attendance: ['calendarX', () => t('attendance'), 'danger']
   };
 
+  /** Best-effort icon for a subject name in any of the three languages. */
+  const SUBJECT_ICONS = [
+    [/ریاض|ریاضي|math|شمار/i, 'chart'],
+    [/علوم|ساینس|science|فزیک|کیمیا/i, 'flask'],
+    [/انگلیسی|انګلیسي|english/i, 'languages'],
+    [/دری|پښتو|pashto|ادب|ژبه/i, 'bookOpen'],
+    [/تاریخ|history|جغرافیه/i, 'bookMarked'],
+    [/ورزش|سپورت|sport/i, 'activity'],
+    [/قرآن|اسلامی|دین/i, 'mark'],
+    [/هنر|رسم|art/i, 'palette'],
+    [/کمپیوتر|تکنالوژی|computer/i, 'monitor']
+  ];
+  const subjectIcon = (name) => (SUBJECT_ICONS.find(([re]) => re.test(name || '')) || [null, 'bookOpen'])[1];
+
   // ================================================================= home ====
   VIEWS.home = {
     id: 'home', icon: 'home', label: () => t('home'), roles: schoolRoles,
@@ -70,7 +84,7 @@
       ${next ? `<div class="card">
         <div class="section-title" style="margin-bottom:8px">${esc(t('due_soon'))}</div>
         <div class="list-item" style="padding:0">
-          <div class="avatar">${I('homework')}</div>
+          <span class="tile">${I(subjectIcon(L(next.subject_fa)))}</span>
           <div class="body">
             <div class="title">${esc(L(next.title))}</div>
             <div class="sub">${esc(L(next.subject_fa) || '')} · ${esc(fmt.date(next.due_at))}</div>
@@ -328,7 +342,7 @@
         const st = hw.sub_status === 'graded' ? ['checkCircle', 'ok']
           : hw.sub_status === 'returned' ? ['repeat', 'danger']
           : hw.sub_status === 'late' ? ['alert', 'warn']
-          : hw.sub_status ? ['upload', 'info'] : ['homework', ''];
+          : hw.sub_status ? ['upload', 'info'] : [subjectIcon(L(hw.subject_fa)), ''];
         return `<div class="card tight" data-hw="${esc(hw.id)}">
           <div class="row" style="align-items:flex-start">
             <span class="tile ${st[1]}">${I(st[0])}</span>
@@ -358,7 +372,7 @@
       });
       qsa('[data-hw]', root).forEach((el) => el.onclick = () => { location.hash = '#/homework/' + el.dataset.hw; });
       if (['teacher', 'admin', 'principal'].includes(APP.session.view.role) && !ctx.params.id) {
-        const fab = h('button', { class: 'fab', onclick: () => VIEWS.homework.compose() }, '＋');
+        const fab = h('button', { class: 'fab', 'aria-label': t('new_homework'), html: I('plus'), onclick: () => VIEWS.homework.compose() });
         root.appendChild(fab);
       }
     },
@@ -610,7 +624,7 @@
                 const slot = slots.find((s) => s.period === p && s.day === day);
                 if (!slot) return `<div class="tt-cell empty"></div>`;
                 const name = subjectOf(slot);
-                return `<div class="tt-cell" style="background:${esc(colors[name] || '#2563eb')}" title="${esc(name)}">${esc(name.slice(0, 6))}</div>`;
+                return `<div class="tt-cell" style="background:${esc(colors[name] || '#2563eb')}" title="${esc(name)}">${I(subjectIcon(name))}<span>${esc(name.slice(0, 6))}</span></div>`;
               }).join('')}
             `).join('')}
           </div>
@@ -621,13 +635,17 @@
       const hhmm = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
       const list = `
         <div class="section-title">${esc(t('today_classes'))} — ${esc(fmt.weekday(todayISO))}</div>
-        ${todaySlots.length ? `<div class="tt-day-list">${todaySlots.map((s) => `
-          <div class="tt-slot ${s.start_time <= hhmm && s.end_time >= hhmm ? 'now' : ''}">
+        ${todaySlots.length ? `<div class="tt-day-list">${todaySlots.map((s) => {
+          const now = s.start_time <= hhmm && s.end_time >= hhmm;
+          return `
+          <div class="tt-slot ${now ? 'now' : ''}">
             <div class="pno">${s.period}</div>
-            <div class="grow"><strong class="small">${esc(subjectOf(s))}</strong>
+            <span class="tile sm ${now ? '' : 'muted'}">${I(subjectIcon(subjectOf(s)))}</span>
+            <div class="grow" style="min-width:0"><strong class="small">${esc(subjectOf(s))}</strong>
               <div class="tiny muted">${esc(s.start_time)}–${esc(s.end_time)} · ${esc(s.teacher_fa || '')} ${s.room ? '· ' + esc(s.room) : ''}</div></div>
-            <span class="chip outline">${esc(s.room || '')}</span>
-          </div>`).join('')}</div>` : `<div class="card">${empty('calendarDays', t('no_class_today'))}</div>`}`;
+            ${now ? `<span class="chip solid">${I('activity')} ${esc(t('now') || '')}</span>` : (s.room ? `<span class="chip outline">${esc(s.room)}</span>` : '')}
+          </div>`;
+        }).join('')}</div>` : `<div class="card">${empty('calendarDays', t('no_class_today'))}</div>`}`;
 
       return grid + list;
     }
@@ -858,19 +876,23 @@
         </div>
         <div class="row" style="margin-top:8px">
           <button class="btn sm secondary grow" id="allPresent">${I('check')} ${esc(t('mark_all_present'))}</button>
-          <button class="btn sm grow" id="saveAtt">${esc(t('save'))}</button>
+          <button class="btn sm grow" id="saveAtt">${I('save')} ${esc(t('save'))}</button>
+        </div>
+        <div class="row wrap tiny muted" style="margin-top:8px;gap:12px">
+          ${[['check', 'present'], ['close', 'absent'], ['clock', 'late'], ['file', 'excused']]
+            .map(([ic, k]) => `<span class="row tight" style="gap:4px">${I(ic)} ${esc(t(k))}</span>`).join('')}
         </div>
       </div>
       <div class="card">
         <div class="list" id="attList">
           ${students.map((s) => `<div class="list-item" data-stu="${esc(s.id)}">
-            <div class="avatar">${I(s.avatar || 'graduation')}</div>
+            <span class="tile sm ${(s.status || 'present') === 'absent' ? 'danger' : (s.status || 'present') === 'late' ? 'warn' : 'muted'}">${I(s.avatar || 'graduation')}</span>
             <div class="body"><div class="title">${esc(s.name_fa || s.name_en)}</div>
               <div class="tiny muted">${esc(t('absences'))}: ${s.absences || 0}</div></div>
-          </div>
-          <div class="segmented" style="margin:-4px 0 8px" data-status-for="${esc(s.id)}">
-            ${[['present', t('present')], ['absent', t('absent')], ['late', t('late')], ['excused', t('excused')]]
-              .map(([v, l]) => `<button data-st="${v}" class="${(s.status || 'present') === v ? 'active' : ''}">${esc(l)}</button>`).join('')}
+            <div class="segmented status" data-status-for="${esc(s.id)}">
+              ${[['present', t('present'), 'check'], ['absent', t('absent'), 'close'], ['late', t('late'), 'clock'], ['excused', t('excused'), 'file']]
+                .map(([v, l, ic]) => `<button type="button" data-st="${v}" title="${esc(l)}" aria-label="${esc(l)}" class="${(s.status || 'present') === v ? 'active' : ''}">${I(ic)}</button>`).join('')}
+            </div>
           </div>`).join('') || empty('graduation', t('no_results'))}
         </div>
       </div>`;
@@ -920,7 +942,7 @@
             <div class="row"><div class="avatar sm">${I(s.avatar || 'graduation')}</div>
               <div><strong class="small">${esc(s.name_fa || s.name_en)}</strong>
                 <div class="tiny muted">${esc(t('absences'))}: ${s.absences || 0} · ${esc(t('submitted'))}: ${s.submissions || 0}</div></div></div>
-            <button class="btn sm secondary" data-improve="${esc(s.id)}">＋ ${esc(t('add_improvement'))}</button>
+            <button class="btn sm secondary" data-improve="${esc(s.id)}">${I('plus')} ${esc(t('add_improvement'))}</button>
           </div>
         </div>`).join('') || empty('graduation', t('no_results'))}`;
       }
@@ -978,7 +1000,7 @@
       if (tab === 'users') {
         const { users } = await API.get('/api/users');
         inner = `
-          <button class="btn block" id="addUser">＋ ${esc(t('add_user'))}</button>
+          <button class="btn block" id="addUser">${I('plus')} ${esc(t('add_user'))}</button>
           <button class="btn secondary block" id="importCsv">${I('download')} ${esc(t('import_csv'))}</button>
           <button class="btn ghost block" id="exportCsv">${I('upload')} ${esc(t('export'))} CSV</button>
           <div class="card"><div class="list">
@@ -994,11 +1016,11 @@
         inner = `
           <div class="card tight"><div class="row">
             <input type="text" id="newSubject" placeholder="${esc(t('subjects'))}" style="flex:1"/>
-            <button class="btn sm" id="addSubject">＋</button></div></div>
+            <button class="btn sm" id="addSubject">${I('plus')}</button></div></div>
           <div class="card tight"><div class="row">
             <input type="number" id="classGrade" placeholder="${esc(t('grade'))}" style="flex:1" min="1" max="12"/>
             <input type="text" id="classSection" placeholder="${esc(t('section'))}" style="flex:1" value="الف"/>
-            <button class="btn sm" id="addClass">＋ ${esc(t('class'))}</button></div></div>
+            <button class="btn sm" id="addClass">${I('plus')} ${esc(t('class'))}</button></div></div>
           <div class="card"><div class="list">
             ${classes.map((c) => `<div class="list-item"><div class="avatar">${I('school')}</div>
               <div class="body"><div class="title">${esc(c.grade)}-${esc(c.section)}</div>

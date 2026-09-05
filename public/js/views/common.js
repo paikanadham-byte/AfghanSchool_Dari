@@ -158,7 +158,7 @@
           </div>
           <span class="tiny muted">${esc(th.last_message ? fmt.ago(th.last_message.created_at) : '')}</span>
         </div>`).join('')}</div></div>
-        <button class="btn secondary block" id="newThread">＋ ${esc(t('messages'))}</button>`;
+        <button class="btn secondary block" id="newThread">${I('plus')} ${esc(t('messages'))}</button>`;
     },
     async mount(root, ctx) {
       if (ctx.params.id) {
@@ -245,7 +245,7 @@
         <div class="card tight">
           <div class="row">
             <input type="text" id="taskTitle" placeholder="${esc(t('add'))}…" style="flex:1"/>
-            <button class="btn sm" id="taskAdd">＋</button>
+            <button class="btn sm" id="taskAdd">${I('plus')}</button>
           </div>
           <div class="row" style="margin-top:8px">
             <input type="date" id="taskDue" style="flex:1"/>

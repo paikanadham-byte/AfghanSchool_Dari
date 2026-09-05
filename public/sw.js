@@ -1,7 +1,7 @@
 /* Afghan Care & School — service worker.
    Precaches the app shell so the app opens with no signal, serves API GETs
    from cache when offline, and never caches write requests. */
-const VERSION = 'acs-v2.1.0';
+const VERSION = 'acs-v2.2.0';
 const SHELL = [
   '/',
   '/index.html',

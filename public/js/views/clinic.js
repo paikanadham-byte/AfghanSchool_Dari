@@ -95,10 +95,11 @@
         ${(overview.my_queue || []).length ? overview.my_queue.map((q2) => `
           <div class="token-card" style="margin-bottom:8px">
             <div class="token-no">${esc(q2.token_no)}</div>
-            <div class="grow"><strong class="small">${esc(q2.full_name)}</strong>
-              <div class="tiny muted">${esc(q2.mrn || '')} ${q2.priority ? '· ' + I('zap') : ''}</div></div>
+            <span class="tile sm ${q2.priority ? 'danger' : 'muted'}">${I(q2.priority ? 'zap' : 'userRound')}</span>
+            <div class="grow" style="min-width:0"><strong class="small">${esc(q2.full_name)}</strong>
+              <div class="tiny muted">${esc(q2.mrn || '')} ${q2.priority ? '· ' + esc(t('high')) : ''}</div></div>
             ${chip(t(q2.status) || q2.status, STATUS_CHIP[q2.status] || 'grey')}
-            ${q2.status === 'waiting' ? `<button class="btn sm" data-call="${esc(q2.id)}">${esc(t('called'))}</button>` : ''}
+            ${q2.status === 'waiting' ? `<button class="btn sm" data-call="${esc(q2.id)}">${I('megaphone')} ${esc(t('called'))}</button>` : ''}
             <a class="btn sm secondary" href="#/patients/${esc(q2.patient_id)}">${esc(t('examination'))}</a>
           </div>`).join('') : `<div class="card">${empty('token', t('no_results'))}</div>`}
         ${(overview.follow_ups || []).length ? `<div class="section-title">${esc(t('follow_up'))}</div>
@@ -135,8 +136,9 @@
       ${(overview.queue || []).slice(0, 6).map((q2) => `
         <div class="token-card" style="margin-bottom:8px">
           <div class="token-no">${esc(q2.token_no)}</div>
-          <div class="grow"><strong class="small">${esc(q2.full_name)}</strong>
-            <div class="tiny muted">${esc(q2.doctor_fa || '')} ${q2.priority ? '· ' + I('zap') : ''}</div></div>
+          <span class="tile sm ${q2.priority ? 'danger' : 'muted'}">${I(q2.priority ? 'zap' : 'userRound')}</span>
+          <div class="grow" style="min-width:0"><strong class="small">${esc(q2.full_name)}</strong>
+            <div class="tiny muted">${esc(q2.doctor_fa || '')} ${q2.priority ? '· ' + esc(t('high')) : ''}</div></div>
           ${chip(t(q2.status) || q2.status, STATUS_CHIP[q2.status] || 'grey')}
         </div>`).join('') || `<div class="card">${empty('token', t('no_results'))}</div>`}`;
     },
@@ -175,7 +177,7 @@
           <select id="qDoctor" style="flex:1"><option value="">—</option>${doctors.map((d) => `<option value="${esc(d.id)}">${esc(d.name_fa || d.username)}</option>`).join('')}</select>
           <label class="chip outline"><input type="checkbox" id="qPriority" style="margin-inline-end:6px"/>${I('zap')} ${esc(t('high'))}</label>
         </div>
-        <button class="btn block" id="qIssue" style="margin-top:8px">＋ ${esc(t('issue_token'))}</button>
+        <button class="btn block" id="qIssue" style="margin-top:8px">${I('plus')} ${esc(t('issue_token'))}</button>
       </div>
       <div class="section-title">${esc(t('queue'))}</div>
       ${data.queue.length ? data.queue.map((q2) => `
@@ -218,17 +220,20 @@
       const waiting = data.queue.filter((q2) => q2.status === 'waiting').slice(0, 12);
       const dir = I18N.isRTL() ? 'rtl' : 'ltr';
       return `<div dir="${dir}">
-        <div class="spread" style="margin-bottom:10px">
-          <div><h1 style="margin:0">${esc(APP.session.org ? L(APP.session.org.name_fa) : t('clinic'))}</h1>
-            <div class="tiny">${esc(fmt.date(fmt.todayISO()))} · ${esc(fmt.weekday(fmt.todayISO()))}</div></div>
-          <a href="#/home_clinic" style="color:#fff">${I('close')} ${esc(t('close'))}</a>
+        <div class="board-head">
+          <span class="tile solid lg">${I('hospital')}</span>
+          <div class="grow" style="min-width:0">
+            <h1 style="margin:0">${esc(APP.session.org ? L(APP.session.org.name_fa) : t('clinic'))}</h1>
+            <div class="tiny" style="opacity:.75">${esc(fmt.weekday(fmt.todayISO()))} · ${esc(fmt.date(fmt.todayISO()))}</div>
+          </div>
+          <a href="#/home_clinic" style="color:#fff;display:inline-flex;align-items:center;gap:6px">${I('close')} ${esc(t('close'))}</a>
         </div>
         <div class="card" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);text-align:center">
-          <div class="tiny">${esc(t('now_serving'))}</div>
+          <div class="tiny" style="display:flex;align-items:center;justify-content:center;gap:6px;opacity:.8">${I('megaphone')} ${esc(t('now_serving'))}</div>
           <div class="now">${esc(serving.map((s) => s.token_no).join(' · ') || '—')}</div>
           <div class="small">${esc(serving.map((s) => s.full_name).join(' · '))}</div>
         </div>
-        <div class="tiny" style="margin:16px 0 6px">${esc(t('waiting'))}</div>
+        <div class="tiny" style="margin:16px 0 6px;display:flex;align-items:center;gap:6px;opacity:.8">${I('hourglass')} ${esc(t('waiting'))} · ${waiting.length}</div>
         <div class="tokens">
           ${waiting.map((w) => `<div class="token ${w.status === 'called' ? 'called' : ''}">
             <div style="font-size:2rem;font-weight:900">${esc(w.token_no)}</div>
@@ -248,7 +253,7 @@
       const { patients } = await API.get('/api/clinic/patients');
       return `
       <div class="card tight"><input type="text" id="patSearch" placeholder="${esc(t('search_placeholder'))}"/></div>
-      ${isStaff() ? `<button class="btn block" id="newPatient">＋ ${esc(t('register_patient'))}</button>` : ''}
+      ${isStaff() ? `<button class="btn block" id="newPatient">${I('plus')} ${esc(t('register_patient'))}</button>` : ''}
       <div id="patList" class="stack">
         ${patients.map((p) => `<div class="card tight" data-pat="${esc(p.id)}">
           <div class="spread">
@@ -449,7 +454,7 @@
             </div>
           </div>
           ${canManage ? `<div class="row" style="margin-top:8px">
-            <button class="btn sm secondary grow" data-receive="${esc(m.id)}">＋ ${esc(t('receive_stock'))}</button>
+            <button class="btn sm secondary grow" data-receive="${esc(m.id)}">${I('plus')} ${esc(t('receive_stock'))}</button>
             <button class="btn sm ghost" data-edit="${esc(m.id)}">${esc(t('edit'))}</button>
           </div>` : ''}
         </div>`).join('') || empty('pill', t('no_results'));
@@ -459,7 +464,7 @@
         ${stat(medications.filter((m) => m.expires_soon || m.expired).length, t('expiring'))}
         ${stat(medications.length, t('medicine'))}
       </div>
-      ${canManage ? `<button class="btn block" id="addMed">＋ ${esc(t('medicine'))}</button>` : ''}
+      ${canManage ? `<button class="btn block" id="addMed">${I('plus')} ${esc(t('medicine'))}</button>` : ''}
       ${rows}`;
     },
     mount(root) {
